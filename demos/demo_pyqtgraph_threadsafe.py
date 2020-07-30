@@ -374,7 +374,7 @@ if __name__ == "__main__":
     window = MainWindow()
 
     # Fake a device that generates data at a sampling rate of `Fs` Hz. The
-    # data gets generated and transferred to our ChartHistory-instance from
+    # data gets generated and transferred to our HistoryChartCurve-instance from
     # out of a separate thread. This is taken care of by QDeviceIO.
     class FakeDevice:
         def __init__(self):
