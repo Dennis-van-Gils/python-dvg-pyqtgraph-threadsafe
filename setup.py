@@ -26,7 +26,7 @@ setup(
     name="dvg-pyqtgraph-threadsafe",
     version="1.0.0",
     license="MIT",
-    description="PyQtGraph library providing thread-safe plot curves with underlying (ring) buffers: HistoryChartCurve, BufferedPlotCurve & PlotCurve.",
+    description="PyQtGraph library providing thread-safe plot curves with underlying (ring) buffers.",
     long_description="%s\n%s"
     % (
         re.compile("^.. start-badges.*^.. end-badges", re.M | re.S).sub(
