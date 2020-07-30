@@ -23,8 +23,8 @@ Installation::
     pip install dvg-pyqtgraph-threadsafe
 
 Classes ``HistoryChartCurve``, ``BufferedPlotCurve`` & ``PlotCurve`` wrap around
-a ``pyqtgraph.PlotDataItem`` class, called a *curve* for convenience. Data can
-be safely appended or set from out of any thread. 
+a ``pyqtgraph.PlotDataItem`` instance, called a *curve* for convenience. Data
+can be safely appended or set from out of any thread. 
 
 The (x, y)-curve data is buffered internally to the class, relying on either a
 circular/ring buffer or a regular array buffer:
