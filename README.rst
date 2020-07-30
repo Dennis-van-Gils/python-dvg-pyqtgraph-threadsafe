@@ -127,8 +127,8 @@ API
         Attributes:
             x_axis_divisor (``float``):
                 The x-data in the buffer will be divided by this factor when the
-                plot curve is redrawn. Useful to, e.g., transform the x-axis
-                units from milliseconds to seconds or minutes.
+                plot curve is drawn. Useful to, e.g., transform the x-axis units
+                from milliseconds to seconds or minutes.
 
                 Default: 1
 

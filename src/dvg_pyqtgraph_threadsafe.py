@@ -131,8 +131,8 @@ class ThreadSafeCurve(object):
         Attributes:
             x_axis_divisor (``float``):
                 The x-data in the buffer will be divided by this factor when the
-                plot curve is redrawn. Useful to, e.g., transform the x-axis
-                units from milliseconds to seconds or minutes.
+                plot curve is drawn. Useful to, e.g., transform the x-axis units
+                from milliseconds to seconds or minutes.
 
                 Default: 1
 
@@ -223,7 +223,7 @@ class ThreadSafeCurve(object):
         # Note: .setData() is a super fast operation and will internally emit
         # a PyQt signal to redraw the curve, once it has updated its data
         # members. That's why .setData() returns almost immediately, but the
-        # curve still has to get redrawn.
+        # curve still has to get drawn.
         if self.curve is not None:
             if (len(self._snapshot_x) == 0) or (
                 np.alltrue(np.isnan(self._snapshot_y))
