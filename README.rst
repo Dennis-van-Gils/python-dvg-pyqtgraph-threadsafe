@@ -74,7 +74,7 @@ Usage:
         # The following line could have been executed from inside of another thread:
         window.tscurve_1.extend_data([1, 2, 3, 4, 5], [10, 20, 30, 40, 50])
 
-        # Redraw the curve from out of the main thread
+        # Draw the curve from out of the main thread
         window.tscurve_1.update()
 
         window.show()

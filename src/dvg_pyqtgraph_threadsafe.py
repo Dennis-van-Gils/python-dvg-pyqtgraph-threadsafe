@@ -62,7 +62,7 @@ Usage:
         # The following line could have been executed from inside of another thread:
         window.tscurve_1.extend_data([1, 2, 3, 4, 5], [10, 20, 30, 40, 50])
 
-        # Redraw the curve from out of the main thread
+        # Draw the curve from out of the main thread
         window.tscurve_1.update()
 
         window.show()
@@ -220,10 +220,11 @@ class ThreadSafeCurve(object):
         locker.unlock()
 
         # Now update the data behind the curve and redraw it on screen.
-        # Note: .setData() is a super fast operation and will internally emit
+        # Note: .setData() is also a fast operation and will internally emit
         # a PyQt signal to redraw the curve, once it has updated its data
         # members. That's why .setData() returns almost immediately, but the
-        # curve still has to get drawn.
+        # curve still has to get redrawn by the Qt event engine, which will
+        # happen automatically, eventually.
         if self.curve is not None:
             if (len(self._snapshot_x) == 0) or (
                 np.alltrue(np.isnan(self._snapshot_y))
