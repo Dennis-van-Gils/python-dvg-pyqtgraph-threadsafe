@@ -141,7 +141,7 @@ Methods
 -------
 * ``apply_downsampling(state: bool = True, ds=4)``
     Downsample the curve by using PyQtGraph's build-in method
-    ``setDownsampling()``.
+    ``pyqtgraph.PlotDataItem.setDownsampling()``.
 
 * ``append_data(x, y):``
     Append a single (x, y)-data point to the ring buffer.

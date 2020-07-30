@@ -167,12 +167,12 @@ class ThreadSafeCurve(object):
             # Default to no downsampling
             self.curve.setDownsampling(ds=1, auto=False, method="mean")
 
-    def apply_downsampling(self, do_apply: bool = True, ds=4):
+    def apply_downsampling(self, state: bool = True, ds=4):
         """Downsample the curve by using PyQtGraph's build-in method
-        ``setDownsampling()``.
+        ``pyqtgraph.PlotDataItem.setDownsampling()``.
         """
         if self.curve is not None:
-            if do_apply:
+            if state:
                 # Speed up plotting, needed for keeping the GUI responsive when
                 # using large datasets
                 self.curve.setDownsampling(ds=ds, auto=False, method="mean")
