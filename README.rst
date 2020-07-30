@@ -167,9 +167,9 @@ Properties
 * ``size -> Tuple[int, int]``:
     Number of elements currently contained in the underlying (x, y)-
     buffers of the curve. Note that this is not necessarily the number of
-    elements of the currently drawn curve, but reflects the data buffer
-    behind it that will be drawn onto screen by the next call to
-    ``update()``.
+    elements of the currently drawn curve. Instead, it reflects the current
+    sizes of the data buffers behind it that will be drawn onto screen by
+    the next call to ``update()``.
 
 ``class HistoryChartCurve(capacity: int, linked_curve: pg.PlotDataItem)``
 --------------------------------------------------------------------------
