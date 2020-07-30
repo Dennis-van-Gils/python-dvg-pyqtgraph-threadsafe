@@ -24,7 +24,8 @@ circular/ring buffer or a regular array buffer:
         recent data is on the right-side of the ring buffer.
 
     BufferedPlotCurve
-        Ring buffer. Data will be plotted as is. Can also act as a Lissajous figure.
+        Ring buffer. Data will be plotted as is. Can also act as a Lissajous
+        figure.
 
     PlotCurve
         Regular array buffer. Data will be plotted as is.
@@ -44,7 +45,7 @@ Usage:
 
                 self.gw = pg.GraphicsWindow()
                 self.plot_1 = self.gw.addPlot()
-                
+
                 # Create a HistoryChartCurve and have it wrap around a new PlotDataItem
                 # as set by argument `linked_curve`.
                 self.tscurve_1 = HistoryChartCurve(
@@ -60,7 +61,7 @@ Usage:
 
         # The following line could have been executed from inside of another thread:
         window.tscurve_1.extend_data([1, 2, 3, 4, 5], [10, 20, 30, 40, 50])
-        
+
         # Redraw the curve from out of the main thread
         window.tscurve_1.update()
 
@@ -90,7 +91,7 @@ class ThreadSafeCurve(object):
         shift_right_x_to_zero: bool = False,
         use_ringbuffer: bool = True,
     ):
-        """Provides the base class for a thread-safe plotting `curve` to which
+        """Provides the base class for a thread-safe plot *curve* to which
         (x, y)-data can be safely appended or set from out of any thread. It
         will wrap around the passed argument ``linked_curve`` of type
         ``pyqtgraph.PlotDataItem`` and will manage the (x, y)-data buffers
@@ -167,7 +168,8 @@ class ThreadSafeCurve(object):
             self.curve.setDownsampling(ds=1, auto=False, method="mean")
 
     def apply_downsampling(self, do_apply: bool = True, ds=4):
-        """Downsample the curve by using PyQtGraph's build-in method.
+        """Downsample the curve by using PyQtGraph's build-in method
+        ``setDownsampling()``.
         """
         if self.curve is not None:
             if do_apply:
@@ -196,7 +198,7 @@ class ThreadSafeCurve(object):
             locker.unlock()
 
     def set_data(self, x_list, y_list):
-        """Set the (x, y)-data underlying the curve.
+        """Set the (x, y)-data of the regular array buffer.
         """
         if not self._use_ringbuffer:
             locker = QtCore.QMutexLocker(self._mutex)
