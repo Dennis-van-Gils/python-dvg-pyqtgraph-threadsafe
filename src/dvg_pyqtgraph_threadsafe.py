@@ -17,17 +17,17 @@ be safely appended or set from out of any thread.
 The (x, y)-curve data is buffered internally to the class, relying on either a
 circular/ring buffer or a regular array buffer:
 
-- ``HistoryChartCurve``
-    Ring buffer. The plotted x-data will be shifted such that the
-    right-side is always set to 0. I.e., when `x` denotes time, the data is
-    plotted backwards in time, hence the name *history* chart. The most
-    recent data is on the right-side of the ring buffer.
+    HistoryChartCurve
+        Ring buffer. The plotted x-data will be shifted such that the
+        right-side is always set to 0. I.e., when `x` denotes time, the data is
+        plotted backwards in time, hence the name *history* chart. The most
+        recent data is on the right-side of the ring buffer.
 
-- ``BufferedPlotCurve``
-    Ring buffer. Data will be plotted as is. Can also act as a Lissajous figure.
+    BufferedPlotCurve
+        Ring buffer. Data will be plotted as is. Can also act as a Lissajous figure.
 
-- ``PlotCurve``
-    Regular array buffer. Data will be plotted as is.
+    PlotCurve
+        Regular array buffer. Data will be plotted as is.
 
 Usage:
 
@@ -44,6 +44,9 @@ Usage:
 
                 self.gw = pg.GraphicsWindow()
                 self.plot_1 = self.gw.addPlot()
+                
+                # Create a HistoryChartCurve and have it wrap around a new 
+                # PlotDataItem as set by argument `linked_curve`.
                 self.tscurve_1 = HistoryChartCurve(
                     capacity=5,
                     linked_curve=self.plot_1.plot(pen=pg.mkPen('r')),
@@ -55,7 +58,11 @@ Usage:
         app = QtWidgets.QApplication(sys.argv)
         window = MainWindow()
 
+        # The following line could have been executed from inside of another
+        # thread:
         window.tscurve_1.extend_data([1, 2, 3, 4, 5], [10, 20, 30, 40, 50])
+        
+        # Redraw the curve from out of the main thread
         window.tscurve_1.update()
 
         window.show()
