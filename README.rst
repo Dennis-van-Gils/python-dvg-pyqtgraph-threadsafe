@@ -93,10 +93,10 @@ API
     ``pyqtgraph.PlotDataItem`` and will manage the (x, y)-data buffers
     underlying the curve.
 
-    Intended multithreaded operation: One thread pushes new data into the
-    ``ThreadSafeCurve``-buffers. Another thread performs the GUI refresh by
-    calling ``update()`` which will redraw the curve according to the
-    current buffer contents.
+    Intended multi-threaded operation: One or more threads push new data
+    into the ``ThreadSafeCurve``-buffers. Another thread performs the GUI
+    refresh by calling ``update()`` which will redraw the curve according
+    to the current buffer contents.
 
         Args:
             capacity (``int``):
