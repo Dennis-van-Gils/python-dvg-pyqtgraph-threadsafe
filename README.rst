@@ -57,8 +57,8 @@ Usage:
                 self.gw = pg.GraphicsWindow()
                 self.plot_1 = self.gw.addPlot()
                 
-                # Create a HistoryChartCurve and have it wrap around a new 
-                # PlotDataItem as set by argument `linked_curve`.
+                # Create a HistoryChartCurve and have it wrap around a new PlotDataItem
+                # as set by argument `linked_curve`.
                 self.tscurve_1 = HistoryChartCurve(
                     capacity=5,
                     linked_curve=self.plot_1.plot(pen=pg.mkPen('r')),
@@ -70,8 +70,7 @@ Usage:
         app = QtWidgets.QApplication(sys.argv)
         window = MainWindow()
 
-        # The following line could have been executed from inside of another
-        # thread:
+        # The following line could have been executed from inside of another thread:
         window.tscurve_1.extend_data([1, 2, 3, 4, 5], [10, 20, 30, 40, 50])
         
         # Redraw the curve from out of the main thread
