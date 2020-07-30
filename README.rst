@@ -13,7 +13,7 @@
 DvG_PyQtGraph_ThreadSafe
 ========================
 *PyQtGraph library providing thread-safe plot curves with underlying (ring)
-buffers:* ``HistoryChartCurve``, ``BufferedPlotCurve`` & ``PlotCurve``.
+buffers.*
 
 - Github: https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe
 - PyPI: https://pypi.org/project/dvg-pyqtgraph-threadsafe
