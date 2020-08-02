@@ -74,10 +74,10 @@ __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
 __date__ = "02-08-2020"
 __version__ = "2.0.0"
 
-from typing import Tuple
+from typing import Union, Tuple, List
 
 import numpy as np
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets as QtWid
 import pyqtgraph as pg
 
 from dvg_ringbuffer import RingBuffer
@@ -235,6 +235,8 @@ class ThreadSafeCurve(object):
         self.update()
 
     def name(self):
+        """Get the name of the curve.
+        """
         return self.curve.name()
 
     def isVisible(self) -> bool:
@@ -244,7 +246,8 @@ class ThreadSafeCurve(object):
         self.curve.setVisible(state)
 
     def setDownsampling(self, *args, **kwargs):
-        """See ``pyqtgraph.PlotDataItem.setDownsampling``.
+        """All arguments will be passed onto method
+        ``pyqtgraph.PlotDataItem.setDownsampling()`` of the underlying curve.
         """
         self.curve.setDownsampling(*args, **kwargs)
 
@@ -263,7 +266,7 @@ class ThreadSafeCurve(object):
 
 
 # ------------------------------------------------------------------------------
-#   Subclasses
+#   Derived thread-safe curves
 # ------------------------------------------------------------------------------
 
 
@@ -320,3 +323,158 @@ class PlotCurve(ThreadSafeCurve):
             shift_right_x_to_zero=False,
             use_ringbuffer=False,
         )
+
+
+# ------------------------------------------------------------------------------
+#   LegendSelect
+# ------------------------------------------------------------------------------
+
+
+class LegendSelect(QtWid.QWidget):
+    def __init__(
+        self,
+        curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]],
+        hide_toggle_button: bool = False,
+        box_bg_color: QtGui.QColor = QtGui.QColor(0, 0, 0),
+        box_width: int = 40,
+        box_height: int = 23,
+        parent=None,
+    ):
+        """Create a legend of all passed curves with checkboxes to show or hide
+        each curve. The legend ends with an push button to show or hide all
+        curves in one go. The full set of GUI elements is contained in attribute
+        ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be added to your
+        GUI.
+
+        The initial visibility, name and pen of each curve will be retrieved
+        from the members within the passed curves, i.e.:
+
+            * ``curve.isVisible()``
+            * ``curve.name()``
+            * ``curve.opts["pen"]``
+
+        Example grid:
+            □ Curve 1 [ / ]
+            □ Curve 2 [ / ]
+            □ Curve 3 [ / ]
+            [   toggle    ]
+
+        Args:
+            curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
+                List of ``pyqtgraph.PlotDataItem``s or ``ThreadSafeCurve``s to
+                be controlled by the legend.
+
+            hide_toggle_button (``bool``, optional):
+                Default: False
+
+            box_bg_color (``QtGui.QColor``, optional):
+                Background color of the legend boxes.
+
+                Default: ``QtGui.QColor(0, 0, 0)``
+
+            box_width (``int``, optional):
+                Default: 40
+
+            box_height (``int``, optional):
+                Default: 23
+
+        Attributes:
+            chkbs (``List[PyQt5.QtWidgets.QCheckbox]``):
+                List of checkboxes to control the visiblity of each curve.
+
+            painted_boxes (``List[PyQt5.QtWidgets.QWidget]``):
+                List of painted boxes illustrating the pen of each curve
+
+            qpbt_toggle (``PyQt5.QtWidgets.QPushButton``):
+                Push button instance that toggles showing/hiding all curves in
+                one go.
+
+            grid (``PyQt5.QtWidgets.QGridLayout``):
+                The full set of GUI elements combined into a grid to be added
+                to your GUI.
+        """
+        super().__init__(parent=parent)
+
+        self._curves = curves
+        self.chkbs = list()
+        self.painted_boxes = list()
+
+        self.grid = QtWid.QGridLayout(spacing=1)
+        for idx, curve in enumerate(self._curves):
+            chkb = QtWid.QCheckBox(
+                text=curve.name(),
+                layoutDirection=QtCore.Qt.LeftToRight,
+                checked=curve.isVisible(),
+            )
+            self.chkbs.append(chkb)
+            # fmt: off
+            chkb.clicked.connect(lambda: self._updateVisibility())  # pylint: disable=unnecessary-lambda
+            # fmt: on
+
+            painted_box = self.PaintedBox(
+                pen=curve.opts["pen"],
+                box_bg_color=box_bg_color,
+                box_width=box_width,
+                box_height=box_height,
+            )
+            self.painted_boxes.append(painted_box)
+
+            p = {"alignment": QtCore.Qt.AlignLeft}
+            self.grid.addWidget(chkb, idx, 0, **p)
+            self.grid.addWidget(painted_box, idx, 1)
+            self.grid.setColumnStretch(0, 0)
+            self.grid.setColumnStretch(1, 0)  # Was (1, 1) before PyPi
+            self.grid.setAlignment(QtCore.Qt.AlignTop)
+
+        if not hide_toggle_button:
+            self.qpbt_toggle = QtWid.QPushButton("toggle")
+            self.grid.addItem(QtWid.QSpacerItem(0, 10), self.grid.rowCount(), 0)
+            self.grid.addWidget(self.qpbt_toggle, self.grid.rowCount(), 0, 1, 3)
+            self.qpbt_toggle.clicked.connect(self.toggle)
+
+    @QtCore.pyqtSlot()
+    def _updateVisibility(self):
+        for idx, chkb in enumerate(self.chkbs):
+            self._curves[idx].setVisible(chkb.isChecked())
+
+    @QtCore.pyqtSlot()
+    def toggle(self):
+        # First : If any checkbox is unchecked  --> check all
+        # Second: If all checkboxes are checked --> uncheck all
+        any_unchecked = False
+        for chkb in self.chkbs:
+            if not chkb.isChecked():
+                chkb.setChecked(True)
+                any_unchecked = True
+
+        if not any_unchecked:
+            for chkb in self.chkbs:
+                chkb.setChecked(False)
+
+        self._updateVisibility()
+
+    class PaintedBox(QtWid.QWidget):
+        def __init__(
+            self, pen, box_bg_color, box_width, box_height, parent=None
+        ):
+            super().__init__(parent=parent)
+
+            self.pen = pen
+            self.box_bg_color = box_bg_color
+
+            self.setFixedWidth(box_width)
+            self.setFixedHeight(box_height)
+
+        def paintEvent(self, _event):
+            w = self.width()
+            h = self.height()
+            x = 8  # offset line
+            y = 6  # offset line
+
+            painter = QtGui.QPainter()
+            painter.begin(self)
+            painter.fillRect(0, 0, w, h, self.box_bg_color)
+            painter.setPen(self.pen)
+            painter.drawLine(QtCore.QLine(x, h - y, w - x, y))
+            painter.end()
+

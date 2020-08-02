@@ -4,12 +4,22 @@
 import sys
 
 import numpy as np
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 from PyQt5 import QtWidgets as QtWid
 import pyqtgraph as pg
 
-from dvg_qdeviceio import QDeviceIO
-from dvg_pyqtgraph_threadsafe import HistoryChartCurve, BufferedPlotCurve
+try:
+    from dvg_qdeviceio import QDeviceIO
+except ImportError:
+    print("This demo requires `dvg-qdeviceio`. It can be installed with:")
+    print("  pip install dvg-qdeviceio")
+    sys.exit(0)
+
+from dvg_pyqtgraph_threadsafe import (
+    HistoryChartCurve,
+    BufferedPlotCurve,
+    LegendSelect,
+)
 
 USE_OPENGL = True
 if USE_OPENGL:
@@ -17,8 +27,6 @@ if USE_OPENGL:
     pg.setConfigOptions(useOpenGL=True)
     pg.setConfigOptions(antialias=True)
     pg.setConfigOptions(enableExperimental=True)
-
-pg.setConfigOption("leftButtonPan", False)
 
 # Constants
 Fs = 10000  # Sampling rate of the simulated data [Hz]
@@ -46,12 +54,7 @@ class MainWindow(QtWid.QWidget):
         # Pause/unpause charts
         self.paused = False
 
-        # GraphicsWindow
-        capacity = round(CHART_HISTORY_TIME * Fs)
-        PEN_1 = pg.mkPen(color=[255, 30, 180], width=3)
-        PEN_2 = pg.mkPen(color=[0, 255, 255], width=3)
-        PEN_3 = pg.mkPen(color=[255, 255, 90], width=3)
-
+        # GraphicsLayoutWidget
         self.gw = pg.GraphicsLayoutWidget()
 
         p = {"color": "#CCC", "font-size": "10pt"}
@@ -75,14 +78,24 @@ class MainWindow(QtWid.QWidget):
             xRange=[-1.1, 1.1], yRange=[-1.1, 1.1], disableAutoRange=True,
         )
 
+        capacity = round(CHART_HISTORY_TIME * Fs)
         self.tscurve_1 = HistoryChartCurve(
-            capacity=capacity, linked_curve=self.plot_1.plot(pen=PEN_1),
+            capacity=capacity,
+            linked_curve=self.plot_1.plot(
+                pen=pg.mkPen(color=[255, 30, 180], width=3), name="wave 1"
+            ),
         )
         self.tscurve_2 = HistoryChartCurve(
-            capacity=capacity, linked_curve=self.plot_1.plot(pen=PEN_2),
+            capacity=capacity,
+            linked_curve=self.plot_1.plot(
+                pen=pg.mkPen(color=[0, 255, 255], width=3), name="wave 2"
+            ),
         )
         self.tscurve_3 = BufferedPlotCurve(
-            capacity=capacity, linked_curve=self.plot_2.plot(pen=PEN_3),
+            capacity=capacity,
+            linked_curve=self.plot_2.plot(
+                pen=pg.mkPen(color=[255, 255, 90], width=3), name="Lissajous"
+            ),
         )
 
         self.tscurves = [
@@ -100,7 +113,7 @@ class MainWindow(QtWid.QWidget):
             symbolSize=16,
         )
 
-        # `Obtained rates`
+        # 'Obtained rates'
         self.qlbl_DAQ_rate = QtWid.QLabel("")
         self.qlbl_DAQ_rate.setAlignment(QtCore.Qt.AlignRight)
         self.qlbl_DAQ_rate.setMinimumWidth(50)
@@ -124,17 +137,13 @@ class MainWindow(QtWid.QWidget):
         # fmt: on
 
         # 'Legend'
-        self.legend_box = LegendBox(
-            text=["wave 1", "wave 2", "Lissajous"],
-            pen=[PEN_1, PEN_2, PEN_3],
-            checked=[True, True, True],
-        )
-        self.set_visibility_curves()
-        for chkb in self.legend_box.chkbs:
-            chkb.clicked.connect(self.set_visibility_curves)
-
+        legend = LegendSelect(curves=self.tscurves)
         qgrp_legend = QtWid.QGroupBox("Legend")
-        qgrp_legend.setLayout(self.legend_box.grid)
+        qgrp_legend.setLayout(legend.grid)
+
+        # Update `number of points drawn` at each click `show/hide curve`
+        for chkb in legend.chkbs:
+            chkb.clicked.connect(self.update_num_points_drawn)
 
         # 'Chart'
         self.qpbt_pause_chart = QtWid.QPushButton("Pause", checkable=True)
@@ -196,21 +205,6 @@ class MainWindow(QtWid.QWidget):
             self.qpbt_pause_chart.setText("Unpause")
             self.paused = True
 
-    @QtCore.pyqtSlot()
-    def update_GUI(self):
-        self.qlbl_DAQ_rate.setText("%.1f" % qdev.obtained_DAQ_rate_Hz)
-
-    @QtCore.pyqtSlot()
-    def update_curves(self):
-        for tscurve in self.tscurves:
-            tscurve.update()
-
-        if len(self.tscurve_3.curve.xData) > 0:
-            self.lissajous_marker.setData(
-                [self.tscurve_3.curve.xData[-1]],
-                [self.tscurve_3.curve.yData[-1]],
-            )
-
     def update_num_points_drawn(self):
         # Keep track of the number of drawn points
         num_points = 0
@@ -225,11 +219,15 @@ class MainWindow(QtWid.QWidget):
         self.qlbl_num_points.setText("%s" % f"{(num_points):,}")
 
     @QtCore.pyqtSlot()
-    def set_visibility_curves(self):
-        for idx, tscurve in enumerate(self.tscurves):
-            tscurve.setVisible(self.legend_box.chkbs[idx].isChecked())
+    def update_curves(self):
+        for tscurve in self.tscurves:
+            tscurve.update()
 
-        self.update_num_points_drawn()
+        if len(self.tscurve_3.curve.xData) > 0:
+            self.lissajous_marker.setData(
+                [self.tscurve_3.curve.xData[-1]],
+                [self.tscurve_3.curve.yData[-1]],
+            )
 
     @QtCore.pyqtSlot()
     def update_charts(self):
@@ -257,83 +255,9 @@ class MainWindow(QtWid.QWidget):
             self.update_num_points_drawn()
             self.update_curves()
 
-
-# ------------------------------------------------------------------------------
-#  LegendBox
-# ------------------------------------------------------------------------------
-
-
-class LegendBox(QtWid.QWidget):
-    def __init__(
-        self,
-        text="",
-        pen=QtGui.QPen(QtCore.Qt.red),
-        checked=True,
-        bg_color=QtGui.QColor(36, 36, 36),
-        box_width=40,
-        box_height=23,
-        parent=None,
-    ):
-        super().__init__(parent=parent)
-
-        if not isinstance(text, list):
-            text = [text]
-        if not isinstance(pen, list):
-            pen = [pen]
-        if not isinstance(checked, list):
-            checked = [checked]
-
-        self.chkbs = []
-        self.painted_lines = []
-        self.grid = QtWid.QGridLayout(spacing=1)
-
-        for i in range(len(text)):
-            try:
-                _checked = checked[i]
-            except:  # pylint: disable=bare-except
-                _checked = True
-
-            chkb = QtWid.QCheckBox(
-                text[i], layoutDirection=QtCore.Qt.LeftToRight, checked=_checked
-            )
-            self.chkbs.append(chkb)
-
-            painted_line = self.PaintedLine(
-                pen[i], bg_color, box_width, box_height
-            )
-            self.painted_lines.append(painted_line)
-
-            p = {"alignment": QtCore.Qt.AlignLeft}
-            self.grid.addWidget(chkb, i, 0, **p)
-            self.grid.addWidget(painted_line, i, 1)
-            self.grid.setColumnStretch(0, 0)
-            self.grid.setColumnStretch(1, 1)
-            self.grid.setAlignment(QtCore.Qt.AlignTop)
-
-    class PaintedLine(QtWid.QWidget):
-        def __init__(self, pen, bg_color, box_width, box_height, parent=None):
-            super().__init__(parent=parent)
-
-            self.pen = pen
-            self.bg_color = bg_color
-            self.box_width = box_width
-            self.box_height = box_height
-
-            self.setFixedWidth(box_width)
-            self.setFixedHeight(box_height)
-
-        def paintEvent(self, _event):
-            w = self.width()
-            h = self.height()
-            x = 8
-            y = 6
-
-            painter = QtGui.QPainter()
-            painter.begin(self)
-            painter.fillRect(0, 0, w, h, self.bg_color)
-            painter.setPen(self.pen)
-            painter.drawLine(QtCore.QLine(x, h - y, w - x, y))
-            painter.end()
+    @QtCore.pyqtSlot()
+    def update_GUI(self):
+        self.qlbl_DAQ_rate.setText("%.1f" % qdev.obtained_DAQ_rate_Hz)
 
 
 # ------------------------------------------------------------------------------
@@ -348,11 +272,12 @@ def about_to_quit():
 
 def DAQ_function():
     if window.tscurve_1.size[0] == 0:
-        x_ = 0
+        x_0 = 0
     else:
-        x_ = window.tscurve_1._buffer_x[-1]
+        # Pick up the previously last phase of the sine
+        x_0 = window.tscurve_1._buffer_x[-1]  # pylint: disable=protected-access
 
-    x = (1 + np.arange(WORKER_DAQ_INTERVAL_MS * Fs / 1e3)) / Fs + x_
+    x = (1 + np.arange(WORKER_DAQ_INTERVAL_MS * Fs / 1e3)) / Fs + x_0
     y_sin = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
     y_cos = np.cos(2 * np.pi * 0.9 * np.unwrap(x))
 

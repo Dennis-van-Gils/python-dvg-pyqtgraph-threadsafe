@@ -55,7 +55,7 @@ Usage:
             def __init__(self, parent=None, **kwargs):
                 super().__init__(parent, **kwargs)
 
-                self.gw = pg.GraphicsWindow()
+                self.gw = pg.GraphicsLayoutWidget()
                 self.plot_1 = self.gw.addPlot()
 
                 # Create a HistoryChartCurve and have it wrap around a new PlotDataItem
@@ -72,7 +72,7 @@ Usage:
         window = MainWindow()
 
         # The following line could have been executed from inside of another thread:
-        window.tscurve_1.extend_data([1, 2, 3, 4, 5], [10, 20, 30, 40, 50])
+        window.tscurve_1.extendData([1, 2, 3, 4, 5], [10, 20, 30, 20, 10])
 
         # Draw the curve from out of the main thread
         window.tscurve_1.update()
@@ -116,11 +116,11 @@ API
                 When True, the (x, y)-data buffers are each a ring buffer. New
                 readings are placed at the end (right-side) of the buffer,
                 pushing out the oldest readings when the buffer has reached its
-                maximum capacity (FIFO). Use methods ``append_data()`` and
-                ``extend_data()`` to push in new data.
+                maximum capacity (FIFO). Use methods ``appendData()`` and
+                ``extendData()`` to push in new data.
 
                 When False, the (x, y)-data buffers are each a regular array
-                buffer. Use method ``set_data()`` to set the data.
+                buffer. Use method ``setData()`` to set the data.
 
                 Default: True
 
@@ -139,28 +139,32 @@ API
 
 Methods
 -------
-* ``apply_downsampling(state: bool = True, ds=4)``
-    Downsample the curve by using PyQtGraph's build-in method
-    ``pyqtgraph.PlotDataItem.setDownsampling()``.
-
-* ``append_data(x, y):``
+* ``appendData(x, y)``
     Append a single (x, y)-data point to the ring buffer.
 
-* ``extend_data(x_list, y_list):``
+* ``extendData(x_list, y_list)``
     Extend the ring buffer with a list of (x, y)-data points.
 
-* ``set_data(x_list, y_list):``
+* ``setData(x_list, y_list)``
     Set the (x, y)-data of the regular array buffer.
 
-* ``update():``
+* ``update()``
     Update the data behind the curve, based on the current contents of
     the buffer, and redraw the curve on screen.
 
-* ``clear():``
+* ``clear()``
     Clear the contents of the curve and redraw.
 
-* ``is_visible() -> bool``
-* ``set_visible(state: bool = True)``
+* ``name()``
+    Get the name of the curve.
+
+* ``isVisible() -> bool``
+* ``setVisible(state: bool = True)``
+
+* ``setDownsampling(*args, **kwargs)``
+    All arguments will be passed onto method
+    ``pyqtgraph.PlotDataItem.setDownsampling()`` of the underlying curve.
+
 
 Properties
 ----------
@@ -178,8 +182,8 @@ Properties
     Provides a thread-safe curve with underlying ring buffers for the
     (x, y)-data. New readings are placed at the end (right-side) of the
     buffer, pushing out the oldest readings when the buffer has reached its
-    maximum capacity (FIFO). Use methods ``append_data()`` and
-    ``extend_data()`` to push in new data.
+    maximum capacity (FIFO). Use methods ``appendData()`` and
+    ``extendData()`` to push in new data.
 
     The plotted x-data will be shifted such that the right-side is always
     set to 0. I.e., when ``x`` denotes time, the data is plotted backwards
@@ -194,8 +198,8 @@ Properties
     Provides a thread-safe curve with underlying ring buffers for the
     (x, y)-data. New readings are placed at the end (right-side) of the
     buffer, pushing out the oldest readings when the buffer has reached its
-    maximum capacity (FIFO). Use methods ``append_data()`` and
-    ``extend_data()`` to push in new data.
+    maximum capacity (FIFO). Use methods ``appendData()`` and
+    ``extendData()`` to push in new data.
 
     See class ``ThreadSafeCurve`` for more details.
 
@@ -204,6 +208,6 @@ Properties
     Bases: ``ThreadSafeCurve``
 
     Provides a thread-safe curve with underlying regular array buffers
-    for the (x, y)-data. Use method ``set_data()`` to set the data.
+    for the (x, y)-data. Use method ``setData()`` to set the data.
 
     See class ``ThreadSafeCurve`` for more details.
