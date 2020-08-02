@@ -340,11 +340,11 @@ class LegendSelect(QtWid.QWidget):
         box_height: int = 23,
         parent=None,
     ):
-        """Create a legend of all passed curves with checkboxes to show or hide
-        each curve. The legend ends with an push button to show or hide all
-        curves in one go. The full set of GUI elements is contained in attribute
-        ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be added to your
-        GUI.
+        """Creates and manages a legend of all passed curves with checkboxes to
+        show or hide each curve. The legend ends with an push button to show or
+        hide all curves in one go. The full set of GUI elements is contained in
+        attribute ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be added to
+        your GUI.
 
         The initial visibility, name and pen of each curve will be retrieved
         from the members within the passed curves, i.e.:
