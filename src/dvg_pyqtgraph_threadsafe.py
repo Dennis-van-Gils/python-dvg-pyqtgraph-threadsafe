@@ -43,7 +43,7 @@ Usage:
             def __init__(self, parent=None, **kwargs):
                 super().__init__(parent, **kwargs)
 
-                self.gw = pg.GraphicsWindow()
+                self.gw = pg.GraphicsLayoutWidget()
                 self.plot_1 = self.gw.addPlot()
 
                 # Create a HistoryChartCurve and have it wrap around a new PlotDataItem
@@ -60,7 +60,7 @@ Usage:
         window = MainWindow()
 
         # The following line could have been executed from inside of another thread:
-        window.tscurve_1.extend_data([1, 2, 3, 4, 5], [10, 20, 30, 40, 50])
+        window.tscurve_1.extendData([1, 2, 3, 4, 5], [10, 20, 30, 20, 10])
 
         # Draw the curve from out of the main thread
         window.tscurve_1.update()
@@ -71,8 +71,8 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "30-07-2020"
-__version__ = "1.0.0"
+__date__ = "02-08-2020"
+__version__ = "2.0.0"
 
 from typing import Tuple
 
@@ -120,11 +120,11 @@ class ThreadSafeCurve(object):
                 When True, the (x, y)-data buffers are each a ring buffer. New
                 readings are placed at the end (right-side) of the buffer,
                 pushing out the oldest readings when the buffer has reached its
-                maximum capacity (FIFO). Use methods ``append_data()`` and
-                ``extend_data()`` to push in new data.
+                maximum capacity (FIFO). Use methods ``appendData()`` and
+                ``extendData()`` to push in new data.
 
                 When False, the (x, y)-data buffers are each a regular array
-                buffer. Use method ``set_data()`` to set the data.
+                buffer. Use method ``setData()`` to set the data.
 
                 Default: True
 
@@ -143,6 +143,8 @@ class ThreadSafeCurve(object):
         """
         self.capacity = capacity
         self.curve = linked_curve
+        self.opts = self.curve.opts  # Use for read-only
+
         self._shift_right_x_to_zero = shift_right_x_to_zero
         self._use_ringbuffer = use_ringbuffer
         self._mutex = QtCore.QMutex()  # To allow proper multithreading
@@ -160,26 +162,7 @@ class ThreadSafeCurve(object):
         self._snapshot_x = [0]
         self._snapshot_y = [0]
 
-        if self.curve is not None:
-            # Performance boost: Do not plot data outside of visible range
-            self.curve.clipToView = True
-
-            # Default to no downsampling
-            self.curve.setDownsampling(ds=1, auto=False, method="mean")
-
-    def apply_downsampling(self, state: bool = True, ds=4):
-        """Downsample the curve by using PyQtGraph's build-in method
-        ``pyqtgraph.PlotDataItem.setDownsampling()``.
-        """
-        if self.curve is not None:
-            if state:
-                # Speed up plotting, needed for keeping the GUI responsive when
-                # using large datasets
-                self.curve.setDownsampling(ds=ds, auto=False, method="mean")
-            else:
-                self.curve.setDownsampling(ds=1, auto=False, method="mean")
-
-    def append_data(self, x, y):
+    def appendData(self, x, y):
         """Append a single (x, y)-data point to the ring buffer.
         """
         if self._use_ringbuffer:
@@ -188,7 +171,7 @@ class ThreadSafeCurve(object):
             self._buffer_y.append(y)
             locker.unlock()
 
-    def extend_data(self, x_list, y_list):
+    def extendData(self, x_list, y_list):
         """Extend the ring buffer with a list of (x, y)-data points.
         """
         if self._use_ringbuffer:
@@ -197,7 +180,7 @@ class ThreadSafeCurve(object):
             self._buffer_y.extend(y_list)
             locker.unlock()
 
-    def set_data(self, x_list, y_list):
+    def setData(self, x_list, y_list):
         """Set the (x, y)-data of the regular array buffer.
         """
         if not self._use_ringbuffer:
@@ -225,18 +208,18 @@ class ThreadSafeCurve(object):
         # members. That's why .setData() returns almost immediately, but the
         # curve still has to get redrawn by the Qt event engine, which will
         # happen automatically, eventually.
-        if self.curve is not None:
-            if (len(self._snapshot_x) == 0) or (
-                np.alltrue(np.isnan(self._snapshot_y))
-            ):
-                self.curve.setData([], [])
-            else:
-                x_0 = self._snapshot_x[-1] if self._shift_right_x_to_zero else 0
-                self.curve.setData(
-                    (self._snapshot_x - x_0) / float(self.x_axis_divisor),
-                    self._snapshot_y / float(self.y_axis_divisor),
-                )
+        if (len(self._snapshot_x) == 0) or (
+            np.alltrue(np.isnan(self._snapshot_y))
+        ):
+            self.curve.setData([], [])
+        else:
+            x_0 = self._snapshot_x[-1] if self._shift_right_x_to_zero else 0
+            self.curve.setData(
+                (self._snapshot_x - x_0) / float(self.x_axis_divisor),
+                self._snapshot_y / float(self.y_axis_divisor),
+            )
 
+    @QtCore.pyqtSlot()
     def clear(self):
         """Clear the contents of the curve and redraw.
         """
@@ -251,11 +234,19 @@ class ThreadSafeCurve(object):
 
         self.update()
 
-    def is_visible(self) -> bool:
+    def name(self):
+        return self.curve.name()
+
+    def isVisible(self) -> bool:
         return self.curve.isVisible()
 
-    def set_visible(self, state: bool = True):
+    def setVisible(self, state: bool = True):
         self.curve.setVisible(state)
+
+    def setDownsampling(self, *args, **kwargs):
+        """See ``pyqtgraph.PlotDataItem.setDownsampling``.
+        """
+        self.curve.setDownsampling(*args, **kwargs)
 
     @property
     def size(self) -> Tuple[int, int]:
@@ -277,12 +268,12 @@ class ThreadSafeCurve(object):
 
 
 class HistoryChartCurve(ThreadSafeCurve):
-    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem = None):
+    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
         """Provides a thread-safe curve with underlying ring buffers for the
         (x, y)-data. New readings are placed at the end (right-side) of the
         buffer, pushing out the oldest readings when the buffer has reached its
-        maximum capacity (FIFO). Use methods ``append_data()`` and
-        ``extend_data()`` to push in new data.
+        maximum capacity (FIFO). Use methods ``appendData()`` and
+        ``extendData()`` to push in new data.
 
         The plotted x-data will be shifted such that the right-side is always
         set to 0. I.e., when ``x`` denotes time, the data is plotted backwards
@@ -299,12 +290,12 @@ class HistoryChartCurve(ThreadSafeCurve):
 
 
 class BufferedPlotCurve(ThreadSafeCurve):
-    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem = None):
+    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
         """Provides a thread-safe curve with underlying ring buffers for the
         (x, y)-data. New readings are placed at the end (right-side) of the
         buffer, pushing out the oldest readings when the buffer has reached its
-        maximum capacity (FIFO). Use methods ``append_data()`` and
-        ``extend_data()`` to push in new data.
+        maximum capacity (FIFO). Use methods ``appendData()`` and
+        ``extendData()`` to push in new data.
 
         See class ``ThreadSafeCurve`` for more details.
         """
@@ -317,9 +308,9 @@ class BufferedPlotCurve(ThreadSafeCurve):
 
 
 class PlotCurve(ThreadSafeCurve):
-    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem = None):
+    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
         """Provides a thread-safe curve with underlying regular array buffers
-        for the (x, y)-data. Use method ``set_data()`` to set the data.
+        for the (x, y)-data. Use method ``setData()`` to set the data.
 
         See class ``ThreadSafeCurve`` for more details.
         """

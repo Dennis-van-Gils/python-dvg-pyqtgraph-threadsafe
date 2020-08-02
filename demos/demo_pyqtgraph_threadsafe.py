@@ -52,7 +52,7 @@ class MainWindow(QtWid.QWidget):
         PEN_2 = pg.mkPen(color=[0, 255, 255], width=3)
         PEN_3 = pg.mkPen(color=[255, 255, 90], width=3)
 
-        self.gw = pg.GraphicsWindow()
+        self.gw = pg.GraphicsLayoutWidget()
 
         p = {"color": "#CCC", "font-size": "10pt"}
         self.plot_1 = self.gw.addPlot()
@@ -215,7 +215,7 @@ class MainWindow(QtWid.QWidget):
         # Keep track of the number of drawn points
         num_points = 0
         for tscurve in self.tscurves:
-            if tscurve.is_visible():
+            if tscurve.isVisible():
                 num_points += (
                     0
                     if tscurve.curve.xData is None
@@ -227,7 +227,7 @@ class MainWindow(QtWid.QWidget):
     @QtCore.pyqtSlot()
     def set_visibility_curves(self):
         for idx, tscurve in enumerate(self.tscurves):
-            tscurve.set_visible(self.legend_box.chkbs[idx].isChecked())
+            tscurve.setVisible(self.legend_box.chkbs[idx].isChecked())
 
         self.update_num_points_drawn()
 
@@ -356,9 +356,9 @@ def DAQ_function():
     y_sin = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
     y_cos = np.cos(2 * np.pi * 0.9 * np.unwrap(x))
 
-    window.tscurve_1.extend_data(x, y_sin)
-    window.tscurve_2.extend_data(x, y_cos)
-    window.tscurve_3.extend_data(y_sin, y_cos)
+    window.tscurve_1.extendData(x, y_sin)
+    window.tscurve_2.extendData(x, y_cos)
+    window.tscurve_3.extendData(y_sin, y_cos)
 
     return True
 
