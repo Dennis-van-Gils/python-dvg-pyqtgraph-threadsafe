@@ -361,8 +361,8 @@ class LegendSelect(QtWid.QWidget):
 
         Args:
             curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
-                List of ``pyqtgraph.PlotDataItem``s or ``ThreadSafeCurve``s to
-                be controlled by the legend.
+                List of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve`` to be
+                controlled by the legend.
 
             hide_toggle_button (``bool``, optional):
                 Default: False

@@ -211,3 +211,61 @@ Properties
     for the (x, y)-data. Use method ``setData()`` to set the data.
 
     See class ``ThreadSafeCurve`` for more details.
+
+``class LegendSelect(curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]], hide_toggle_button: bool = False, box_bg_color: QtGui.QColor = QtGui.QColor(0, 0, 0), box_width: int = 40, box_height: int = 23, parent=None)``
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    Bases: ``PyQt5.QtWidgets.QWidget``
+    
+    Create a legend of all passed curves with checkboxes to show or hide
+    each curve. The legend ends with an push button to show or hide all
+    curves in one go. The full set of GUI elements is contained in attribute
+    ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be added to your
+    GUI.
+
+    The initial visibility, name and pen of each curve will be retrieved
+    from the members within the passed curves, i.e.:
+
+        * ``curve.isVisible()``
+        * ``curve.name()``
+        * ``curve.opts["pen"]``
+
+    Example grid::
+        
+        □ Curve 1 [ / ]
+        □ Curve 2 [ / ]
+        □ Curve 3 [ / ]
+        [   toggle    ]
+
+    Args:
+        curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
+            List of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve`` to be
+            controlled by the legend.
+
+        hide_toggle_button (``bool``, optional):
+            Default: False
+
+        box_bg_color (``QtGui.QColor``, optional):
+            Background color of the legend boxes.
+
+            Default: ``QtGui.QColor(0, 0, 0)``
+
+        box_width (``int``, optional):
+            Default: 40
+
+        box_height (``int``, optional):
+            Default: 23
+
+    Attributes:
+        chkbs (``List[PyQt5.QtWidgets.QCheckbox]``):
+            List of checkboxes to control the visiblity of each curve.
+
+        painted_boxes (``List[PyQt5.QtWidgets.QWidget]``):
+            List of painted boxes illustrating the pen of each curve
+
+        qpbt_toggle (``PyQt5.QtWidgets.QPushButton``):
+            Push button instance that toggles showing/hiding all curves in
+            one go.
+
+        grid (``PyQt5.QtWidgets.QGridLayout``):
+            The full set of GUI elements combined into a grid to be added
+            to your GUI.
