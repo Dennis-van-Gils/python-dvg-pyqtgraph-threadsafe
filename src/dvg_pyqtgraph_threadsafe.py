@@ -71,8 +71,8 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "02-08-2020"
-__version__ = "2.0.0"
+__date__ = "03-08-2020"
+__version__ = "2.0.1"
 
 from typing import Union, Tuple, List
 
@@ -203,21 +203,43 @@ class ThreadSafeCurve(object):
         locker.unlock()
 
         # Now update the data behind the curve and redraw it on screen.
-        # Note: .setData() is also a fast operation and will internally emit
-        # a PyQt signal to redraw the curve, once it has updated its data
-        # members. That's why .setData() returns almost immediately, but the
-        # curve still has to get redrawn by the Qt event engine, which will
-        # happen automatically, eventually.
-        if (len(self._snapshot_x) == 0) or (
-            np.alltrue(np.isnan(self._snapshot_y))
-        ):
+        # Note: .setData() will internally emit a PyQt signal to redraw the
+        # curve, once it has updated its data members. That's why .setData()
+        # returns almost immediately, but the curve still has to get redrawn by
+        # the Qt event engine, which will happen automatically, eventually.
+        if len(self._snapshot_x) == 0:
             self.curve.setData([], [])
         else:
             x_0 = self._snapshot_x[-1] if self._shift_right_x_to_zero else 0
-            self.curve.setData(
-                (self._snapshot_x - x_0) / float(self.x_axis_divisor),
-                self._snapshot_y / float(self.y_axis_divisor),
-            )
+            x = (self._snapshot_x - x_0) / float(self.x_axis_divisor)
+            y = self._snapshot_y / float(self.y_axis_divisor)
+            # self.curve.setData(x,y)  # No! Read below.
+
+            # PyQt5 >= 5.12.3 causes a bug in PyQtGraph where a curve won't
+            # render if it contains NaNs (but only in the case when OpenGL is
+            # disabled). See for more information:
+            # https://github.com/pyqtgraph/pyqtgraph/pull/1287/commits/5d58ec0a1b59f402526e2533977344d043b306d8
+            #
+            # My approach is slightly different:
+            # NaN values are allowed in the source x and y arrays, but we need
+            # to filter them such that the drawn curve is displayed as
+            # *fragmented* whenever NaN is encountered. The parameter `connect`
+            # will help us out here.
+            # NOTE: When OpenGL is used to paint the curve by setting
+            #   pg.setConfigOptions(useOpenGL=True)
+            #   pg.setConfigOptions(enableExperimental=True)
+            # the `connect` argument will get ignored and the curve fragments
+            # are connected together into a continuous curve, linearly
+            # interpolating the gaps. Seems to be little I can do about that,
+            # apart from modifying the pyqtgraph source-code in
+            # `pyqtgraph.plotCurveItem.paintGL()`.
+            finite = np.logical_and(np.isfinite(x), np.isfinite(y))
+            connect = np.logical_and(finite, np.roll(finite, -1))
+            x_finite = x[finite]
+            y_finite = y[finite]
+            connect = connect[finite]
+
+            self.curve.setData(x_finite, y_finite, connect=connect)
 
     @QtCore.pyqtSlot()
     def clear(self):
