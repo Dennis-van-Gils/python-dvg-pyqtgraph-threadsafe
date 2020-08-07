@@ -12,6 +12,6 @@ include LICENSE.txt
 include *.rst
 recursive-include images *.png
 recursive-include timeit *
-recursive-include demos *.py
+recursive-include demos *.py *.png
 
 global-exclude *.py[cod] __pycache__/* *.so *.dylib
