@@ -22,7 +22,7 @@ Installation::
 
     pip install dvg-pyqtgraph-threadsafe
 
-.. image:: https://raw.githubusercontent.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/master/demos/demo_pyqtgraph_threadsafe.PNG
+.. image:: https://raw.githubusercontent.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/master/demos/demo_pyqtgraph_threadsafe.png
 
 Classes ``HistoryChartCurve``, ``BufferedPlotCurve`` & ``PlotCurve`` wrap around
 a ``pyqtgraph.PlotDataItem`` instance, called a *curve* for convenience. Data
