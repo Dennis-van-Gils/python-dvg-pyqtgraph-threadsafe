@@ -4,6 +4,7 @@ Changelog
 3.0.1 (2020-08-07)
 ------------------
 Bug-fixes:
+
 * The use of ``typing.TypedDict`` broke support under Python 3.6
   and 3.7. Fixed by conditional import ``typing_extensions``.
 * Curve plotting was broken when ``setClipToView(True)`` and the curve
