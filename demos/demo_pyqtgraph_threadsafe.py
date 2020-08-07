@@ -186,7 +186,7 @@ class MainWindow(QtWid.QWidget):
                 },
             ],
         )
-        self.plot_manager.add_clear_button(self.tscurves)
+        self.plot_manager.add_clear_button(linked_curves=self.tscurves)
         self.plot_manager.perform_preset(1)
 
         qgrp_plotmgr = QtWid.QGroupBox("PlotManager")
