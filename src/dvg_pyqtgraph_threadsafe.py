@@ -72,10 +72,15 @@ __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
 __date__ = "07-08-2020"
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
-from typing import Union, Tuple, List, TypedDict
 from functools import partial
+from typing import Union, Tuple, List
+
+try:
+    from typing import TypedDict
+except:  # pylint: disable=bare-except
+    from typing_extensions import TypedDict
 
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets as QtWid
@@ -243,13 +248,26 @@ class ThreadSafeCurve(object):
             # interpolating the gaps. Seems to be little I can do about that,
             # apart from modifying the pyqtgraph source-code in
             # `pyqtgraph.plotCurveItem.paintGL()`.
+            #
+            # UPDATE 07-08-2020:
+            # Using parameter `connect` as used below will cause:
+            #   ValueError: could not broadcast input array from shape ('N') into shape ('< N')
+            #   --> arr[1:-1]['c'] = connect
+            #   in ``pyqtgraph.functinos.arrayToQPath()``
+            # This happens when ClipToView is enabled and the curve data extends
+            # past the viewbox limits, when not using OpenGL.
+            # We simply comment out those lines. This results in 100% working
+            # code again, though the curve is no longer shown fragmented but
+            # continuous (with linear interpolation) at each NaN value. That's
+            # okay.
+
             finite = np.logical_and(np.isfinite(x), np.isfinite(y))
-            connect = np.logical_and(finite, np.roll(finite, -1))
+            # connect = np.logical_and(finite, np.roll(finite, -1))
             x_finite = x[finite]
             y_finite = y[finite]
-            connect = connect[finite]
+            # connect = connect[finite]
 
-            self.curve.setData(x_finite, y_finite, connect=connect)
+            self.curve.setData(x_finite, y_finite)  # , connect=connect)
 
     @QtCore.pyqtSlot()
     def clear(self):

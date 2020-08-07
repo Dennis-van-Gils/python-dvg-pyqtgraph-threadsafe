@@ -22,12 +22,18 @@ from dvg_pyqtgraph_threadsafe import (
     PlotManager,
 )
 
-USE_OPENGL = True
-if USE_OPENGL:
-    print("OpenGL acceleration: Enabled")
-    pg.setConfigOptions(useOpenGL=True)
-    pg.setConfigOptions(antialias=True)
-    pg.setConfigOptions(enableExperimental=True)
+TRY_USING_OPENGL = False
+if TRY_USING_OPENGL:
+    try:
+        import OpenGL.GL as gl  # pylint: disable=unused-import
+    except:  # pylint: disable=bare-except
+        print("OpenGL acceleration: Disabled")
+        print("To install: `conda install pyopengl` or `pip install pyopengl`")
+    else:
+        print("OpenGL acceleration: Enabled")
+        pg.setConfigOptions(useOpenGL=True)
+        pg.setConfigOptions(antialias=True)
+        pg.setConfigOptions(enableExperimental=True)
 
 # Global pyqtgraph configuration
 # pg.setConfigOptions(leftButtonPan=False)

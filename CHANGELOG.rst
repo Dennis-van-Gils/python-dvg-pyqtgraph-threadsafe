@@ -1,6 +1,17 @@
 Changelog
 =========
 
+3.0.1 (2020-08-07)
+------------------
+Bug-fixes:
+* The use of ``typing.TypedDict`` broke support under Python 3.6
+  and 3.7. Fixed by conditional import ``typing_extensions``.
+* Curve plotting was broken when ``setClipToView(True)`` and the curve
+  data extended past the viewbox limits, when not using OpenGL. The cause was
+  my incorrect calculation of ``connect``. Fixed by commenting out ``connect``
+  again. Curves will now show continuously (linear interpolation) whenever a NaN
+  is encountered, instead of as correctly fragmented. That's acceptable.
+
 3.0.0 (2020-08-07)
 ------------------
 * Renamed parameter ``LegendSelect.curves`` to
