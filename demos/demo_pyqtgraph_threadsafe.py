@@ -66,7 +66,7 @@ class MainWindow(QtWid.QWidget):
         self.plot_1 = self.gw.addPlot()
         self.plot_1.setClipToView(True)
         self.plot_1.showGrid(x=1, y=1)
-        self.plot_1.setTitle("HistoryChart")
+        self.plot_1.setTitle("HistoryChartCurve")
         self.plot_1.setLabel("bottom", text="history (sec)", **p)
         self.plot_1.setLabel("left", text="amplitude", **p)
         self.plot_1.setRange(
@@ -78,7 +78,7 @@ class MainWindow(QtWid.QWidget):
         self.plot_2 = self.gw.addPlot()
         # self.plot_2.setClipToView(True)  # Note: Do not enable clip for a Lissajous. Clip only works well on uniformly monotic x-data.
         self.plot_2.showGrid(x=1, y=1)
-        self.plot_2.setTitle("BufferedPlot: Lissajous")
+        self.plot_2.setTitle("BufferedPlotCurve: Lissajous")
         self.plot_2.setLabel("bottom", text="x", **p)
         self.plot_2.setLabel("left", text="y", **p)
         self.plot_2.setRange(
