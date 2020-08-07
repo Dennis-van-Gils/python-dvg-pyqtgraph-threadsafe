@@ -19,6 +19,7 @@ from dvg_pyqtgraph_threadsafe import (
     HistoryChartCurve,
     BufferedPlotCurve,
     LegendSelect,
+    PlotManager,
 )
 
 USE_OPENGL = True
@@ -27,6 +28,10 @@ if USE_OPENGL:
     pg.setConfigOptions(useOpenGL=True)
     pg.setConfigOptions(antialias=True)
     pg.setConfigOptions(enableExperimental=True)
+
+# Global pyqtgraph configuration
+# pg.setConfigOptions(leftButtonPan=False)
+pg.setConfigOption("foreground", "#EEE")
 
 # Constants
 Fs = 10000  # Sampling rate of the simulated data [Hz]
@@ -43,7 +48,7 @@ class MainWindow(QtWid.QWidget):
     def __init__(self, parent=None, **kwargs):
         super().__init__(parent, **kwargs)
 
-        self.setGeometry(350, 50, 800, 660)
+        self.setGeometry(350, 50, 1200, 660)
         self.setWindowTitle("Demo: dvg_pyqtgraph_threadsafe")
 
         # Keep track of the obtained chart refresh rate
@@ -57,8 +62,9 @@ class MainWindow(QtWid.QWidget):
         # GraphicsLayoutWidget
         self.gw = pg.GraphicsLayoutWidget()
 
-        p = {"color": "#CCC", "font-size": "10pt"}
+        p = {"color": "#EEE", "font-size": "12pt"}
         self.plot_1 = self.gw.addPlot()
+        self.plot_1.setClipToView(True)
         self.plot_1.showGrid(x=1, y=1)
         self.plot_1.setTitle("HistoryChart")
         self.plot_1.setLabel("bottom", text="history (sec)", **p)
@@ -70,6 +76,7 @@ class MainWindow(QtWid.QWidget):
         )
 
         self.plot_2 = self.gw.addPlot()
+        # self.plot_2.setClipToView(True)  # Note: Do not enable clip for a Lissajous. Clip only works well on uniformly monotic x-data.
         self.plot_2.showGrid(x=1, y=1)
         self.plot_2.setTitle("BufferedPlot: Lissajous")
         self.plot_2.setLabel("bottom", text="x", **p)
@@ -137,32 +144,59 @@ class MainWindow(QtWid.QWidget):
         # fmt: on
 
         # 'Legend'
-        legend = LegendSelect(curves=self.tscurves)
-        qgrp_legend = QtWid.QGroupBox("Legend")
+        legend = LegendSelect(linked_curves=self.tscurves)
+        qgrp_legend = QtWid.QGroupBox("LegendSelect")
         qgrp_legend.setLayout(legend.grid)
 
         # Update `number of points drawn` at each click `show/hide curve`
         for chkb in legend.chkbs:
             chkb.clicked.connect(self.update_num_points_drawn)
 
-        # 'Chart'
+        # `PlotManager`
         self.qpbt_pause_chart = QtWid.QPushButton("Pause", checkable=True)
         self.qpbt_pause_chart.clicked.connect(self.process_qpbt_pause_chart)
-        self.qpbt_clear_chart = QtWid.QPushButton("Clear")
-        self.qpbt_clear_chart.clicked.connect(self.process_qpbt_clear_chart)
 
-        grid = QtWid.QGridLayout()
-        grid.addWidget(self.qpbt_pause_chart, 0, 0)
-        grid.addWidget(self.qpbt_clear_chart, 1, 0)
-        grid.setAlignment(QtCore.Qt.AlignTop)
+        self.plot_manager = PlotManager(parent=self)
+        self.plot_manager.grid.addWidget(self.qpbt_pause_chart, 0, 0, 1, 2)
+        self.plot_manager.grid.addItem(QtWid.QSpacerItem(0, 10), 1, 0)
+        self.plot_manager.add_autorange_buttons(
+            linked_plots=[self.plot_1, self.plot_2]
+        )
+        self.plot_manager.add_preset_buttons(
+            linked_plots=[self.plot_1],
+            linked_curves=[self.tscurve_1, self.tscurve_2],
+            presets=[
+                {
+                    "button_label": "0.100",
+                    "x_axis_label": "history (msec)",
+                    "x_axis_divisor": 1e-3,
+                    "x_axis_range": (-101, 0),
+                },
+                {
+                    "button_label": "0:05",
+                    "x_axis_label": "history (sec)",
+                    "x_axis_divisor": 1,
+                    "x_axis_range": (-5.05, 0),
+                },
+                {
+                    "button_label": "0:10",
+                    "x_axis_label": "history (sec)",
+                    "x_axis_divisor": 1,
+                    "x_axis_range": (-10.1, 0),
+                },
+            ],
+        )
+        self.plot_manager.add_clear_button(self.tscurves)
+        self.plot_manager.perform_preset(1)
 
-        qgrp_chart = QtWid.QGroupBox("Chart")
-        qgrp_chart.setLayout(grid)
+        qgrp_plotmgr = QtWid.QGroupBox("PlotManager")
+        qgrp_plotmgr.setLayout(self.plot_manager.grid)
 
+        # Round up right panel
         vbox = QtWid.QVBoxLayout()
         vbox.addLayout(grid_rates)
         vbox.addWidget(qgrp_legend)
-        vbox.addWidget(qgrp_chart)
+        vbox.addWidget(qgrp_plotmgr, stretch=0)
         vbox.addStretch()
 
         # Round up frame
@@ -202,7 +236,7 @@ class MainWindow(QtWid.QWidget):
             self.qpbt_pause_chart.setText("Pause")
             self.paused = False
         else:
-            self.qpbt_pause_chart.setText("Unpause")
+            self.qpbt_pause_chart.setText("Paused")
             self.paused = True
 
     def update_num_points_drawn(self):
@@ -279,7 +313,7 @@ def DAQ_function():
 
     x = (1 + np.arange(WORKER_DAQ_INTERVAL_MS * Fs / 1e3)) / Fs + x_0
     y_sin = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
-    y_cos = np.cos(2 * np.pi * 0.9 * np.unwrap(x))
+    y_cos = np.cos(2 * np.pi * 0.09 * np.unwrap(x))
 
     window.tscurve_1.extendData(x, y_sin)
     window.tscurve_2.extendData(x, y_cos)

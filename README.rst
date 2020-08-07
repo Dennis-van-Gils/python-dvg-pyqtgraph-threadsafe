@@ -22,6 +22,8 @@ Installation::
 
     pip install dvg-pyqtgraph-threadsafe
 
+.. image:: https://raw.githubusercontent.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/master/demos/demo_pyqtgraph_threadsafe.PNG
+
 Classes ``HistoryChartCurve``, ``BufferedPlotCurve`` & ``PlotCurve`` wrap around
 a ``pyqtgraph.PlotDataItem`` instance, called a *curve* for convenience. Data
 can be safely appended or set from out of any thread.
@@ -148,9 +150,13 @@ Methods
 * ``setData(x_list, y_list)``
     Set the (x, y)-data of the regular array buffer.
 
-* ``update()``
-    Update the data behind the curve, based on the current contents of
-    the buffer, and redraw the curve on screen.
+* ``update(create_snapshot: bool = True)``
+    Update the data behind the curve by creating a snapshot of the
+    current contents of the buffer, and redraw the curve on screen.
+
+    You can suppress updating the data behind the curve by setting parameter
+    ``create_snapshot`` to False. The curve will then only be redrawn
+    based on the old data. This is useful when the plot is paused.
 
 * ``clear()``
     Clear the contents of the curve and redraw.
@@ -214,7 +220,7 @@ Properties
 
 ``class LegendSelect(curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]], hide_toggle_button: bool = False, box_bg_color: QtGui.QColor = QtGui.QColor(0, 0, 0), box_width: int = 40, box_height: int = 23, parent=None)``
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Bases: ``PyQt5.QtWidgets.QWidget``
+    Bases: ``PyQt5.QtCore.QObject``
     
     Creates and manages a legend of all passed curves with checkboxes to
     show or hide each curve. The legend ends with a push button to show or
@@ -231,13 +237,13 @@ Properties
 
     Example grid::
         
-        □ Curve 1 [ / ]
-        □ Curve 2 [ / ]
-        □ Curve 3 [ / ]
-        [   toggle    ]
+        □ Curve 1  [  /  ]
+        □ Curve 2  [  /  ]
+        □ Curve 3  [  /  ]
+        [ Show / Hide all]
 
     Args:
-        curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
+        linked_curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
             List of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve`` to be
             controlled by the legend.
 

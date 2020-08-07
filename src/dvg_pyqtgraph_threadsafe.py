@@ -71,10 +71,11 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "03-08-2020"
-__version__ = "2.0.1"
+__date__ = "07-08-2020"
+__version__ = "3.0.0"
 
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, TypedDict
+from functools import partial
 
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets as QtWid
@@ -159,8 +160,8 @@ class ThreadSafeCurve(object):
             self._buffer_x = np.array([])
             self._buffer_y = np.array([])
 
-        self._snapshot_x = [0]
-        self._snapshot_y = [0]
+        self._snapshot_x = np.array([])
+        self._snapshot_y = np.array([])
 
     def appendData(self, x, y):
         """Append a single (x, y)-data point to the ring buffer.
@@ -189,18 +190,27 @@ class ThreadSafeCurve(object):
             self._buffer_y = y_list
             locker.unlock()
 
-    def update(self):
-        """Update the data behind the curve, based on the current contents of
-        the buffer, and redraw the curve on screen.
+    def update(self, create_snapshot: bool = True):
+        """Update the data behind the curve by creating a snapshot of the
+        current contents of the buffer, and redraw the curve on screen.
+
+        Args:
+            create_snapshot (``bool``):
+                You can suppress updating the data behind the curve by setting
+                this parameter to False. The curve will then only be redrawn
+                based on the old data. This is useful when the plot is paused.
+
+                Default: True
         """
 
-        # Create a snapshot of the buffered data. Fast operation.
-        locker = QtCore.QMutexLocker(self._mutex)
-        self._snapshot_x = np.copy(self._buffer_x)
-        self._snapshot_y = np.copy(self._buffer_y)
-        # print("numel x: %d, numel y: %d" %
-        #      (self._snapshot_x.size, self._snapshot_y.size))
-        locker.unlock()
+        # Create a snapshot of the currently buffered data. Fast operation.
+        if create_snapshot:
+            locker = QtCore.QMutexLocker(self._mutex)
+            self._snapshot_x = np.copy(self._buffer_x)
+            self._snapshot_y = np.copy(self._buffer_y)
+            # print("numel x: %d, numel y: %d" %
+            #      (self._snapshot_x.size, self._snapshot_y.size))
+            locker.unlock()
 
         # Now update the data behind the curve and redraw it on screen.
         # Note: .setData() will internally emit a PyQt signal to redraw the
@@ -352,10 +362,10 @@ class PlotCurve(ThreadSafeCurve):
 # ------------------------------------------------------------------------------
 
 
-class LegendSelect(QtWid.QWidget):
+class LegendSelect(QtCore.QObject):
     def __init__(
         self,
-        curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]],
+        linked_curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]],
         hide_toggle_button: bool = False,
         box_bg_color: QtGui.QColor = QtGui.QColor(0, 0, 0),
         box_width: int = 40,
@@ -375,14 +385,15 @@ class LegendSelect(QtWid.QWidget):
             * ``curve.name()``
             * ``curve.opts["pen"]``
 
-        Example grid:
-            □ Curve 1 [ / ]
-            □ Curve 2 [ / ]
-            □ Curve 3 [ / ]
-            [   toggle    ]
+        Example grid::
+
+            □ Curve 1  [  /  ]
+            □ Curve 2  [  /  ]
+            □ Curve 3  [  /  ]
+            [ Show / Hide all]
 
         Args:
-            curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
+            linked_curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
                 List of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve`` to be
                 controlled by the legend.
 
@@ -417,12 +428,12 @@ class LegendSelect(QtWid.QWidget):
         """
         super().__init__(parent=parent)
 
-        self._curves = curves
+        self._linked_curves = linked_curves
         self.chkbs = list()
         self.painted_boxes = list()
+        self.grid = QtWid.QGridLayout(spacing=1)  # The full set of GUI elements
 
-        self.grid = QtWid.QGridLayout(spacing=1)
-        for idx, curve in enumerate(self._curves):
+        for idx, curve in enumerate(self._linked_curves):
             chkb = QtWid.QCheckBox(
                 text=curve.name(),
                 layoutDirection=QtCore.Qt.LeftToRight,
@@ -444,12 +455,12 @@ class LegendSelect(QtWid.QWidget):
             p = {"alignment": QtCore.Qt.AlignLeft}
             self.grid.addWidget(chkb, idx, 0, **p)
             self.grid.addWidget(painted_box, idx, 1)
-            self.grid.setColumnStretch(0, 0)
-            self.grid.setColumnStretch(1, 0)  # Was (1, 1) before PyPi
+            self.grid.setColumnStretch(0, 1)
+            self.grid.setColumnStretch(1, 0)
             self.grid.setAlignment(QtCore.Qt.AlignTop)
 
         if not hide_toggle_button:
-            self.qpbt_toggle = QtWid.QPushButton("toggle")
+            self.qpbt_toggle = QtWid.QPushButton("Show / Hide all")
             self.grid.addItem(QtWid.QSpacerItem(0, 10), self.grid.rowCount(), 0)
             self.grid.addWidget(self.qpbt_toggle, self.grid.rowCount(), 0, 1, 3)
             self.qpbt_toggle.clicked.connect(self.toggle)
@@ -457,7 +468,7 @@ class LegendSelect(QtWid.QWidget):
     @QtCore.pyqtSlot()
     def _updateVisibility(self):
         for idx, chkb in enumerate(self.chkbs):
-            self._curves[idx].setVisible(chkb.isChecked())
+            self._linked_curves[idx].setVisible(chkb.isChecked())
 
     @QtCore.pyqtSlot()
     def toggle(self):
@@ -500,3 +511,196 @@ class LegendSelect(QtWid.QWidget):
             painter.drawLine(QtCore.QLine(x, h - y, w - x, y))
             painter.end()
 
+
+# ------------------------------------------------------------------------------
+#   PlotManager
+# ------------------------------------------------------------------------------
+
+
+class PlotManager(QtCore.QObject):
+    def __init__(self, parent=None):
+        """
+        Args:
+            parent (``PyQt5.QtWidgets.QWidget``):
+                Needs to be set to the parent QWidget for the QMessageBox as
+                fired by button ``clear`` to appear centered and modal to.
+
+        """
+        super().__init__(parent=parent)
+
+        self._autorange_linked_plots = None
+        self._presets_linked_plots = None
+        self._presets_linked_curves = None
+        self._clear_linked_curves = None
+
+        self._presets = list()
+
+        self.pbtn_fullrange = None
+        self.pbtn_autorange_x = None
+        self.pbtn_autorange_y = None
+        self.pbtns_presets = list()  # Will contain list of QPushButton
+        self.pbtn_clear = None
+
+        # Will contain the full set of GUI elements:
+        self.grid = QtWid.QGridLayout(spacing=1)
+        self.grid.setAlignment(QtCore.Qt.AlignTop)
+
+    class Presets(TypedDict):
+        button_label: str
+        x_axis_label: str
+        x_axis_divisor: float
+        x_axis_range: Tuple[float, float]
+
+    # --------------------------------------------------------------------------
+    #   Presets
+    # --------------------------------------------------------------------------
+
+    def add_preset_buttons(
+        self,
+        linked_plots: List[Union[pg.PlotItem, pg.ViewBox]],
+        linked_curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]],
+        presets: List[Presets],
+    ):
+        """
+        Args:
+            presets (``List[TypedDict]``):
+                List of dictionaries. Each dictionary should contain:
+                    * button_label (``str``)
+                    * x_axis_label (``str``)
+                    * x_axis_divisor (``float``)
+                    * x_axis_range (``Tuple(float, float)``)
+        """
+        if not isinstance(linked_plots, list):
+            linked_plots = (linked_plots,)
+        self._presets_linked_plots = linked_plots
+
+        if not isinstance(linked_curves, list):
+            linked_curves = (linked_curves,)
+        self._presets_linked_curves = linked_curves
+
+        self._presets = presets
+
+        for idx, preset in enumerate(self._presets):
+            pbtn_preset = QtWid.QPushButton(text=preset["button_label"])
+            pbtn_preset.clicked.connect(partial(self.perform_preset, idx))
+            self.grid.addWidget(pbtn_preset, self.grid.rowCount(), 0, 1, 2)
+            self.pbtns_presets.append(pbtn_preset)
+
+    def perform_preset(self, idx: int):
+        """
+        """
+        if self._presets_linked_plots is not None:
+            for plot in self._presets_linked_plots:
+                plot.setXRange(*self._presets[idx]["x_axis_range"])
+                plot.setLabel("bottom", self._presets[idx]["x_axis_label"])
+
+        if self._presets_linked_curves is not None:
+            for curve in self._presets_linked_curves:
+                if isinstance(curve, ThreadSafeCurve):
+                    curve.x_axis_divisor = self._presets[idx]["x_axis_divisor"]
+                    curve.update(create_snapshot=False)
+
+    # --------------------------------------------------------------------------
+    #   Autorange
+    # --------------------------------------------------------------------------
+
+    def add_autorange_buttons(
+        self, linked_plots: List[Union[pg.PlotItem, pg.ViewBox]],
+    ):
+        """
+        """
+        if not isinstance(linked_plots, list):
+            linked_plots = (linked_plots,)
+        self._autorange_linked_plots = linked_plots
+
+        self.pbtn_fullrange = QtWid.QPushButton("Full range")
+        self.pbtn_autorange_x = QtWid.QPushButton("auto x", maximumWidth=65)
+        self.pbtn_autorange_y = QtWid.QPushButton("auto y", maximumWidth=65)
+
+        self.pbtn_fullrange.clicked.connect(self.perform_fullrange)
+        self.pbtn_autorange_x.clicked.connect(self.perform_autorange_x)
+        self.pbtn_autorange_y.clicked.connect(self.perform_autorange_y)
+
+        self.grid.addWidget(self.pbtn_fullrange, self.grid.rowCount(), 0, 1, 2)
+        row_idx = self.grid.rowCount()
+        self.grid.addWidget(self.pbtn_autorange_x, row_idx, 0)
+        self.grid.addWidget(self.pbtn_autorange_y, row_idx, 1)
+
+    def perform_fullrange(self):
+        """
+        """
+        if self._autorange_linked_plots is not None:
+            for plot in self._autorange_linked_plots:
+                # Momentarily ignore `clipToView`
+                clip_to_view_state = plot.clipToViewMode()
+                if clip_to_view_state:
+                    plot.setClipToView(False)
+
+                plot.enableAutoRange("x", True)
+                plot.enableAutoRange("x", False)
+                plot.enableAutoRange("y", True)
+                plot.enableAutoRange("y", False)
+
+                # Restore `clipToView`
+                if clip_to_view_state:
+                    plot.setClipToView(True)
+
+    def perform_autorange_x(self):
+        """
+        """
+        if self._autorange_linked_plots is not None:
+            for plot in self._autorange_linked_plots:
+                # Momentarily ignore `clipToView`
+                clip_to_view_state = plot.clipToViewMode()
+                if clip_to_view_state:
+                    plot.setClipToView(False)
+
+                plot.enableAutoRange("x", True)
+
+                # Restore `clipToView`
+                if clip_to_view_state:
+                    plot.setClipToView(True)
+
+    def perform_autorange_y(self):
+        """
+        """
+        if self._autorange_linked_plots is not None:
+            for plot in self._autorange_linked_plots:
+                plot.enableAutoRange("y", True)
+
+    # --------------------------------------------------------------------------
+    #   Clear
+    # --------------------------------------------------------------------------
+
+    def add_clear_button(
+        self, linked_curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]],
+    ):
+        """
+        """
+        if not isinstance(linked_curves, list):
+            linked_curves = (linked_curves,)
+        self._clear_linked_curves = linked_curves
+
+        self.pbtn_clear = QtWid.QPushButton("Clear")
+        self.pbtn_clear.clicked.connect(self.perform_clear)
+
+        if self.grid.rowCount() > 1:
+            self.grid.addItem(QtWid.QSpacerItem(0, 10), self.grid.rowCount(), 0)
+        self.grid.addWidget(self.pbtn_clear, self.grid.rowCount(), 0, 1, 2)
+
+    def perform_clear(self):
+        """
+        """
+        str_msg = "Are you sure you want to clear the plots?"
+        reply = QtWid.QMessageBox.warning(
+            self.parent(),
+            "Clear plots",
+            str_msg,
+            QtWid.QMessageBox.Yes | QtWid.QMessageBox.No,
+            QtWid.QMessageBox.No,
+        )
+
+        if reply == QtWid.QMessageBox.Yes:
+            if self._clear_linked_curves is not None:
+                for curve in self._clear_linked_curves:
+                    curve.clear()

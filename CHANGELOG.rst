@@ -1,6 +1,13 @@
 Changelog
 =========
 
+3.0.0 (2020-08-07)
+------------------
+* Renamed parameter ``LegendSelect.curves`` to
+  ``LegendSelect.linked_curves``
+* Changed base of class ``LegendSelect()`` from ``QWidget`` to ``QObject``
+* Added class ``PlotManager()``
+
 2.0.1 (2020-08-03)
 ------------------
 * Workaround: ``PyQt5 >= 5.12.3`` causes a bug in ``PyQtGraph`` where a

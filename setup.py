@@ -24,7 +24,7 @@ def read(*names, **kwargs):
 
 setup(
     name="dvg-pyqtgraph-threadsafe",
-    version="2.0.1",
+    version="3.0.0",
     license="MIT",
     description="PyQtGraph library providing thread-safe plot curves with underlying (ring) buffers.",
     long_description="%s\n%s"
