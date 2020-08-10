@@ -71,7 +71,7 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "07-08-2020"
+__date__ = "10-08-2020"
 __version__ = "3.0.1"
 
 from functools import partial
@@ -90,6 +90,57 @@ from dvg_ringbuffer import RingBuffer
 
 
 class ThreadSafeCurve(object):
+    """Provides the base class for a thread-safe plot *curve* to which
+    (x, y)-data can be safely appended or set from out of any thread. It
+    will wrap around the passed argument ``linked_curve`` of type
+    ``pyqtgraph.PlotDataItem`` and will manage the (x, y)-data buffers
+    underlying the curve.
+
+    Intended multi-threaded operation: One or more threads push new data
+    into the ``ThreadSafeCurve``-buffers. Another thread performs the GUI
+    refresh by calling ``update()`` which will redraw the curve according
+    to the current buffer contents.
+
+    Args:
+        capacity (``int``):
+            Maximum number of (x, y)-data points the buffer can store.
+
+        linked_curve (``pyqtgraph.PlotDataItem``):
+            Instance of ``pyqtgraph.PlotDataItem`` to plot the buffered
+            data out into.
+
+        shift_right_x_to_zero (``bool``, optional):
+            When plotting, should the x-data be shifted such that the
+            right-side is always set to 0? Useful for history charts.
+
+            Default: False
+
+        use_ringbuffer (``bool``, optional):
+            When True, the (x, y)-data buffers are each a ring buffer. New
+            readings are placed at the end (right-side) of the buffer,
+            pushing out the oldest readings when the buffer has reached its
+            maximum capacity (FIFO). Use methods ``appendData()`` and
+            ``extendData()`` to push in new data.
+
+            When False, the (x, y)-data buffers are each a regular array
+            buffer. Use method ``setData()`` to set the data.
+
+            Default: True
+
+    Attributes:
+        x_axis_divisor (``float``):
+            The x-data in the buffer will be divided by this factor when the
+            plot curve is drawn. Useful to, e.g., transform the x-axis units
+            from milliseconds to seconds or minutes.
+
+            Default: 1
+
+        y_axis_divisor (``float``):
+            Same functionality as ``x_axis_divisor``.
+
+            Default: 1
+    """
+
     def __init__(
         self,
         capacity: int,
@@ -97,56 +148,6 @@ class ThreadSafeCurve(object):
         shift_right_x_to_zero: bool = False,
         use_ringbuffer: bool = True,
     ):
-        """Provides the base class for a thread-safe plot *curve* to which
-        (x, y)-data can be safely appended or set from out of any thread. It
-        will wrap around the passed argument ``linked_curve`` of type
-        ``pyqtgraph.PlotDataItem`` and will manage the (x, y)-data buffers
-        underlying the curve.
-
-        Intended multi-threaded operation: One or more threads push new data
-        into the ``ThreadSafeCurve``-buffers. Another thread performs the GUI
-        refresh by calling ``update()`` which will redraw the curve according
-        to the current buffer contents.
-
-        Args:
-            capacity (``int``):
-                Maximum number of (x, y)-data points the buffer can store.
-
-            linked_curve (``pyqtgraph.PlotDataItem``):
-                Instance of ``pyqtgraph.PlotDataItem`` to plot the buffered
-                data out into.
-
-            shift_right_x_to_zero (``bool``, optional):
-                When plotting, should the x-data be shifted such that the
-                right-side is always set to 0? Useful for history charts.
-
-                Default: False
-
-            use_ringbuffer (``bool``, optional):
-                When True, the (x, y)-data buffers are each a ring buffer. New
-                readings are placed at the end (right-side) of the buffer,
-                pushing out the oldest readings when the buffer has reached its
-                maximum capacity (FIFO). Use methods ``appendData()`` and
-                ``extendData()`` to push in new data.
-
-                When False, the (x, y)-data buffers are each a regular array
-                buffer. Use method ``setData()`` to set the data.
-
-                Default: True
-
-        Attributes:
-            x_axis_divisor (``float``):
-                The x-data in the buffer will be divided by this factor when the
-                plot curve is drawn. Useful to, e.g., transform the x-axis units
-                from milliseconds to seconds or minutes.
-
-                Default: 1
-
-            y_axis_divisor (``float``):
-                Same functionality as ``x_axis_divisor``.
-
-                Default: 1
-        """
         self.capacity = capacity
         self.curve = linked_curve
         self.opts = self.curve.opts  # Use for read-only
@@ -321,19 +322,20 @@ class ThreadSafeCurve(object):
 
 
 class HistoryChartCurve(ThreadSafeCurve):
+    """Provides a thread-safe curve with underlying ring buffers for the
+    (x, y)-data. New readings are placed at the end (right-side) of the
+    buffer, pushing out the oldest readings when the buffer has reached its
+    maximum capacity (FIFO). Use methods ``appendData()`` and
+    ``extendData()`` to push in new data.
+
+    The plotted x-data will be shifted such that the right-side is always
+    set to 0. I.e., when ``x`` denotes time, the data is plotted backwards
+    in time, hence the name *history* chart.
+
+    See class ``ThreadSafeCurve`` for more details.
+    """
+
     def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
-        """Provides a thread-safe curve with underlying ring buffers for the
-        (x, y)-data. New readings are placed at the end (right-side) of the
-        buffer, pushing out the oldest readings when the buffer has reached its
-        maximum capacity (FIFO). Use methods ``appendData()`` and
-        ``extendData()`` to push in new data.
-
-        The plotted x-data will be shifted such that the right-side is always
-        set to 0. I.e., when ``x`` denotes time, the data is plotted backwards
-        in time, hence the name *history* chart.
-
-        See class ``ThreadSafeCurve`` for more details.
-        """
         super().__init__(
             capacity=capacity,
             linked_curve=linked_curve,
@@ -343,15 +345,16 @@ class HistoryChartCurve(ThreadSafeCurve):
 
 
 class BufferedPlotCurve(ThreadSafeCurve):
-    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
-        """Provides a thread-safe curve with underlying ring buffers for the
-        (x, y)-data. New readings are placed at the end (right-side) of the
-        buffer, pushing out the oldest readings when the buffer has reached its
-        maximum capacity (FIFO). Use methods ``appendData()`` and
-        ``extendData()`` to push in new data.
+    """Provides a thread-safe curve with underlying ring buffers for the
+    (x, y)-data. New readings are placed at the end (right-side) of the
+    buffer, pushing out the oldest readings when the buffer has reached its
+    maximum capacity (FIFO). Use methods ``appendData()`` and
+    ``extendData()`` to push in new data.
 
-        See class ``ThreadSafeCurve`` for more details.
-        """
+    See class ``ThreadSafeCurve`` for more details.
+    """
+
+    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
         super().__init__(
             capacity=capacity,
             linked_curve=linked_curve,
@@ -361,12 +364,13 @@ class BufferedPlotCurve(ThreadSafeCurve):
 
 
 class PlotCurve(ThreadSafeCurve):
-    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
-        """Provides a thread-safe curve with underlying regular array buffers
-        for the (x, y)-data. Use method ``setData()`` to set the data.
+    """Provides a thread-safe curve with underlying regular array buffers
+    for the (x, y)-data. Use method ``setData()`` to set the data.
 
-        See class ``ThreadSafeCurve`` for more details.
-        """
+    See class ``ThreadSafeCurve`` for more details.
+    """
+
+    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
         super().__init__(
             capacity=capacity,
             linked_curve=linked_curve,
@@ -381,6 +385,61 @@ class PlotCurve(ThreadSafeCurve):
 
 
 class LegendSelect(QtCore.QObject):
+    """Creates and manages a legend of all passed curves with checkboxes to
+    show or hide each curve. The legend ends with a push button to show or
+    hide all curves in one go. The full set of GUI elements is contained in
+    attribute ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be added to
+    your GUI.
+
+    The initial visibility, name and pen of each curve will be retrieved
+    from the members within the passed curves, i.e.:
+
+        * ``curve.isVisible()``
+        * ``curve.name()``
+        * ``curve.opts["pen"]``
+
+    Example grid::
+
+        □ Curve 1  [  /  ]
+        □ Curve 2  [  /  ]
+        □ Curve 3  [  /  ]
+        [ Show / Hide all]
+
+    Args:
+        linked_curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
+            List of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve`` to be
+            controlled by the legend.
+
+        hide_toggle_button (``bool``, optional):
+            Default: False
+
+        box_bg_color (``QtGui.QColor``, optional):
+            Background color of the legend boxes.
+
+            Default: ``QtGui.QColor(0, 0, 0)``
+
+        box_width (``int``, optional):
+            Default: 40
+
+        box_height (``int``, optional):
+            Default: 23
+
+    Attributes:
+        chkbs (``List[PyQt5.QtWidgets.QCheckbox]``):
+            List of checkboxes to control the visiblity of each curve.
+
+        painted_boxes (``List[PyQt5.QtWidgets.QWidget]``):
+            List of painted boxes illustrating the pen of each curve.
+
+        qpbt_toggle (``PyQt5.QtWidgets.QPushButton``):
+            Push button instance that toggles showing/hiding all curves in
+            one go.
+
+        grid (``PyQt5.QtWidgets.QGridLayout``):
+            The full set of GUI elements combined into a grid to be added
+            to your GUI.
+    """
+
     def __init__(
         self,
         linked_curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]],
@@ -390,60 +449,6 @@ class LegendSelect(QtCore.QObject):
         box_height: int = 23,
         parent=None,
     ):
-        """Creates and manages a legend of all passed curves with checkboxes to
-        show or hide each curve. The legend ends with a push button to show or
-        hide all curves in one go. The full set of GUI elements is contained in
-        attribute ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be added to
-        your GUI.
-
-        The initial visibility, name and pen of each curve will be retrieved
-        from the members within the passed curves, i.e.:
-
-            * ``curve.isVisible()``
-            * ``curve.name()``
-            * ``curve.opts["pen"]``
-
-        Example grid::
-
-            □ Curve 1  [  /  ]
-            □ Curve 2  [  /  ]
-            □ Curve 3  [  /  ]
-            [ Show / Hide all]
-
-        Args:
-            linked_curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
-                List of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve`` to be
-                controlled by the legend.
-
-            hide_toggle_button (``bool``, optional):
-                Default: False
-
-            box_bg_color (``QtGui.QColor``, optional):
-                Background color of the legend boxes.
-
-                Default: ``QtGui.QColor(0, 0, 0)``
-
-            box_width (``int``, optional):
-                Default: 40
-
-            box_height (``int``, optional):
-                Default: 23
-
-        Attributes:
-            chkbs (``List[PyQt5.QtWidgets.QCheckbox]``):
-                List of checkboxes to control the visiblity of each curve.
-
-            painted_boxes (``List[PyQt5.QtWidgets.QWidget]``):
-                List of painted boxes illustrating the pen of each curve.
-
-            qpbt_toggle (``PyQt5.QtWidgets.QPushButton``):
-                Push button instance that toggles showing/hiding all curves in
-                one go.
-
-            grid (``PyQt5.QtWidgets.QGridLayout``):
-                The full set of GUI elements combined into a grid to be added
-                to your GUI.
-        """
         super().__init__(parent=parent)
 
         self._linked_curves = linked_curves
@@ -536,14 +541,15 @@ class LegendSelect(QtCore.QObject):
 
 
 class PlotManager(QtCore.QObject):
-    def __init__(self, parent=None):
-        """
-        Args:
-            parent (``PyQt5.QtWidgets.QWidget``):
-                Needs to be set to the parent QWidget for the QMessageBox as
-                fired by button ``clear`` to appear centered and modal to.
+    """
+    Args:
+        parent (``PyQt5.QtWidgets.QWidget``):
+            Needs to be set to the parent ``QWidget`` for the ``QMessageBox`` as
+            fired by button ``clear()`` to appear centered and modal to.
 
-        """
+    """
+
+    def __init__(self, parent=None):
         super().__init__(parent=parent)
 
         self._autorange_linked_plots = None
