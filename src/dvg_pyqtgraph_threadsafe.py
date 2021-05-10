@@ -71,11 +71,11 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "10-08-2020"
-__version__ = "3.0.1"
+__date__ = "10-05-2021"
+__version__ = "3.1.0"
 
 from functools import partial
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Optional
 
 try:
     from typing import TypedDict
@@ -102,8 +102,18 @@ class ThreadSafeCurve(object):
     to the current buffer contents.
 
     Args:
-        capacity (``int``):
-            Maximum number of (x, y)-data points the buffer can store.
+        capacity (``int``, optional):
+            When an integer is supplied it defines the maximum number op points
+            each of the x-data and y-data buffers can store. The x-data buffer
+            and the y-data buffer are each a ring buffer. New readings are
+            placed at the end (right-side) of the buffer, pushing out the oldest
+            readings when the buffer has reached its maximum capacity (FIFO).
+            Use methods ``appendData()`` and ``extendData()`` to push in new
+            data.
+
+            When ``None`` is supplied the x-data and y-data buffers are each a
+            regular array buffer of undefined length. Use method ``setData()``
+            to set the data.
 
         linked_curve (``pyqtgraph.PlotDataItem``):
             Instance of ``pyqtgraph.PlotDataItem`` to plot the buffered
@@ -115,17 +125,10 @@ class ThreadSafeCurve(object):
 
             Default: False
 
-        use_ringbuffer (``bool``, optional):
-            When True, the (x, y)-data buffers are each a ring buffer. New
-            readings are placed at the end (right-side) of the buffer,
-            pushing out the oldest readings when the buffer has reached its
-            maximum capacity (FIFO). Use methods ``appendData()`` and
-            ``extendData()`` to push in new data.
-
-            When False, the (x, y)-data buffers are each a regular array
-            buffer. Use method ``setData()`` to set the data.
-
-            Default: True
+        use_ringbuffer (``bool``, deprecated):
+            Deprecated since v3.1.0. Defined for backwards compatibility.
+            Simply supply a value for ``capacity`` to enable use of a ring
+            buffer.
 
     Attributes:
         x_axis_divisor (``float``):
@@ -143,17 +146,17 @@ class ThreadSafeCurve(object):
 
     def __init__(
         self,
-        capacity: int,
+        capacity: Optional[int],
         linked_curve: pg.PlotDataItem,
         shift_right_x_to_zero: bool = False,
-        use_ringbuffer: bool = True,
+        use_ringbuffer=None,  # Deprecated arg for backwards compatibility # pylint: disable=unused-argument
     ):
         self.capacity = capacity
         self.curve = linked_curve
         self.opts = self.curve.opts  # Use for read-only
 
         self._shift_right_x_to_zero = shift_right_x_to_zero
-        self._use_ringbuffer = use_ringbuffer
+        self._use_ringbuffer = capacity is not None
         self._mutex = QtCore.QMutex()  # To allow proper multithreading
 
         self.x_axis_divisor = 1
@@ -340,7 +343,6 @@ class HistoryChartCurve(ThreadSafeCurve):
             capacity=capacity,
             linked_curve=linked_curve,
             shift_right_x_to_zero=True,
-            use_ringbuffer=True,
         )
 
 
@@ -359,7 +361,6 @@ class BufferedPlotCurve(ThreadSafeCurve):
             capacity=capacity,
             linked_curve=linked_curve,
             shift_right_x_to_zero=False,
-            use_ringbuffer=True,
         )
 
 
@@ -370,12 +371,11 @@ class PlotCurve(ThreadSafeCurve):
     See class ``ThreadSafeCurve`` for more details.
     """
 
-    def __init__(self, capacity: int, linked_curve: pg.PlotDataItem):
+    def __init__(self, linked_curve: pg.PlotDataItem):
         super().__init__(
-            capacity=capacity,
+            capacity=None,
             linked_curve=linked_curve,
             shift_right_x_to_zero=False,
-            use_ringbuffer=False,
         )
 
 

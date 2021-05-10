@@ -9,7 +9,7 @@ import pyqtgraph as pg
 
 from dvg_pyqtgraph_threadsafe import PlotCurve
 
-USE_OPENGL = False
+USE_OPENGL = True
 if USE_OPENGL:
     print("OpenGL acceleration: Enabled")
     pg.setConfigOptions(useOpenGL=True)
@@ -37,9 +37,7 @@ class MainWindow(QtWid.QWidget):
             xRange=[0, 5], yRange=[0, 4], disableAutoRange=True,
         )
 
-        capacity = 5
         self.tscurve = PlotCurve(
-            capacity=capacity,
             linked_curve=self.plot_1.plot(
                 pen=pg.mkPen(color=[255, 255, 0], width=3)
             ),

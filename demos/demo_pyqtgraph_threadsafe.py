@@ -22,7 +22,7 @@ from dvg_pyqtgraph_threadsafe import (
     PlotManager,
 )
 
-TRY_USING_OPENGL = False
+TRY_USING_OPENGL = True
 if TRY_USING_OPENGL:
     try:
         import OpenGL.GL as gl  # pylint: disable=unused-import

@@ -86,8 +86,8 @@ API
 ===
 
 
-``class ThreadSafeCurve(capacity: int, linked_curve: pg.PlotDataItem, shift_right_x_to_zero: bool = False, use_ringbuffer: bool = True)``
------------------------------------------------------------------------------------------------------------------------------------------
+``class ThreadSafeCurve(capacity: Optional[int], linked_curve: pg.PlotDataItem, shift_right_x_to_zero: bool = False, use_ringbuffer = None)``
+---------------------------------------------------------------------------------------------------------------------------------------------
 
     Provides the base class for a thread-safe plot *curve* to which
     (x, y)-data can be safely appended or set from out of any thread. It
@@ -100,44 +100,47 @@ API
     refresh by calling ``update()`` which will redraw the curve according
     to the current buffer contents.
 
-        Args:
-            capacity (``int``):
-                Maximum number of (x, y)-data points the buffer can store.
+    Args:
+        capacity (``int``, optional):
+            When an integer is supplied it defines the maximum number op points
+            each of the x-data and y-data buffers can store. The x-data buffer
+            and the y-data buffer are each a ring buffer. New readings are
+            placed at the end (right-side) of the buffer, pushing out the oldest
+            readings when the buffer has reached its maximum capacity (FIFO).
+            Use methods ``appendData()`` and ``extendData()`` to push in new
+            data.
 
-            linked_curve (``pyqtgraph.PlotDataItem``):
-                Instance of ``pyqtgraph.PlotDataItem`` to plot the buffered
-                data out into.
+            When ``None`` is supplied the x-data and y-data buffers are each a
+            regular array buffer of undefined length. Use method ``setData()``
+            to set the data.
 
-            shift_right_x_to_zero (``bool``, optional):
-                When plotting, should the x-data be shifted such that the
-                right-side is always set to 0? Useful for history charts.
+        linked_curve (``pyqtgraph.PlotDataItem``):
+            Instance of ``pyqtgraph.PlotDataItem`` to plot the buffered
+            data out into.
 
-                Default: False
+        shift_right_x_to_zero (``bool``, optional):
+            When plotting, should the x-data be shifted such that the
+            right-side is always set to 0? Useful for history charts.
 
-            use_ringbuffer (``bool``, optional):
-                When True, the (x, y)-data buffers are each a ring buffer. New
-                readings are placed at the end (right-side) of the buffer,
-                pushing out the oldest readings when the buffer has reached its
-                maximum capacity (FIFO). Use methods ``appendData()`` and
-                ``extendData()`` to push in new data.
+            Default: False
 
-                When False, the (x, y)-data buffers are each a regular array
-                buffer. Use method ``setData()`` to set the data.
+        use_ringbuffer (``bool``, deprecated):
+            Deprecated since v3.1.0. Defined for backwards compatibility.
+            Simply supply a value for ``capacity`` to enable use of a ring
+            buffer.
 
-                Default: True
+    Attributes:
+        x_axis_divisor (``float``):
+            The x-data in the buffer will be divided by this factor when the
+            plot curve is drawn. Useful to, e.g., transform the x-axis units
+            from milliseconds to seconds or minutes.
 
-        Attributes:
-            x_axis_divisor (``float``):
-                The x-data in the buffer will be divided by this factor when the
-                plot curve is drawn. Useful to, e.g., transform the x-axis units
-                from milliseconds to seconds or minutes.
+            Default: 1
 
-                Default: 1
+        y_axis_divisor (``float``):
+            Same functionality as ``x_axis_divisor``.
 
-            y_axis_divisor (``float``):
-                Same functionality as ``x_axis_divisor``.
-
-                Default: 1
+            Default: 1
 
 Methods
 -------
@@ -221,7 +224,7 @@ Properties
 ``class LegendSelect(curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]], hide_toggle_button: bool = False, box_bg_color: QtGui.QColor = QtGui.QColor(0, 0, 0), box_width: int = 40, box_height: int = 23, parent=None)``
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     Bases: ``PyQt5.QtCore.QObject``
-    
+
     Creates and manages a legend of all passed curves with checkboxes to
     show or hide each curve. The legend ends with a push button to show or
     hide all curves in one go. The full set of GUI elements is contained in
@@ -236,7 +239,7 @@ Properties
         * ``curve.opts["pen"]``
 
     Example grid::
-        
+
         □ Curve 1  [  /  ]
         □ Curve 2  [  /  ]
         □ Curve 3  [  /  ]
