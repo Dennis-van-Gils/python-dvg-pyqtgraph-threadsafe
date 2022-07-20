@@ -76,6 +76,8 @@ __version__ = "3.1.0"
 
 from functools import partial
 from typing import Union, Tuple, List, Optional
+import os
+import sys
 
 try:
     from typing import TypedDict
@@ -83,8 +85,69 @@ except:  # pylint: disable=bare-except
     from typing_extensions import TypedDict
 
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets as QtWid
+
+from typing import Union
+
 import pyqtgraph as pg
+
+QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
+
+PYSIDE = 'PySide'
+PYSIDE2 = 'PySide2'
+PYSIDE6 = 'PySide6'
+PYQT4 = 'PyQt4'
+PYQT5 = 'PyQt5'
+PYQT6 = 'PyQt6'
+
+if QT_LIB is None:
+    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+
+    for lib in libOrder:
+        if lib in sys.modules:
+            QT_LIB = lib
+            break
+
+if QT_LIB is None:
+    for lib in libOrder:
+        try:
+            __import__(lib)
+            QT_LIB = lib
+            break
+        except ImportError:
+            pass
+
+if QT_LIB is None:
+    raise Exception("PyQtGraph requires one of PyQt5, PyQt6, PySide2 or PySide6; none of these packages could be imported.")
+
+if QT_LIB == PYQT5:
+    from PyQt5 import QtCore, QtGui, QtWidgets as QtWid
+    from PyQt5.QtCore import pyqtSlot as Slot
+
+    QtCore = QtCore
+    QtGui = QtGui
+    QtWid = QtWid
+elif QT_LIB == PYQT6:
+    from PyQt6 import QtCore, QtGui, QtWidgets as QtWid
+    from PyQt6.QtCore import pyqtSlot as Slot
+
+    QtCore = QtCore
+    QtGui = QtGui
+    QtWid = QtWid
+elif QT_LIB == PYSIDE2:
+    from PySide2 import QtCore, QtGui, QtWidgets as QtWid
+    from PySide2.QtCore import Slot as Slot
+
+    QtCore = QtCore
+    QtGui = QtGui
+    QtWid = QtWid
+elif QT_LIB == PYSIDE6:
+    from PySide6 import QtCore, QtGui, QtWidgets as QtWid
+    from PySide6.QtCore import Slot as Slot
+    QtCore = QtCore
+    QtGui = QtGui
+    QtWid = QtWid
+
+
 
 from dvg_ringbuffer import RingBuffer
 
@@ -273,7 +336,7 @@ class ThreadSafeCurve(object):
 
             self.curve.setData(x_finite, y_finite)  # , connect=connect)
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def clear(self):
         """Clear the contents of the curve and redraw.
         """
@@ -488,12 +551,12 @@ class LegendSelect(QtCore.QObject):
             self.grid.addWidget(self.qpbt_toggle, self.grid.rowCount(), 0, 1, 3)
             self.qpbt_toggle.clicked.connect(self.toggle)
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def _updateVisibility(self):
         for idx, chkb in enumerate(self.chkbs):
             self._linked_curves[idx].setVisible(chkb.isChecked())
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def toggle(self):
         # First : If any checkbox is unchecked  --> check all
         # Second: If all checkboxes are checked --> uncheck all
