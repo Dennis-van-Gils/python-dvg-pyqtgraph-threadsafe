@@ -24,7 +24,7 @@ def read(*names, **kwargs):
 
 setup(
     name="dvg-pyqtgraph-threadsafe",
-    version="3.1.0",
+    version="3.2.0",
     license="MIT",
     description="PyQtGraph library providing thread-safe plot curves with underlying (ring) buffers.",
     long_description="%s\n%s"
@@ -50,10 +50,11 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",
-        "Programming Language :: Python",        
+        "Programming Language :: Python",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Multimedia :: Graphics",
         "Topic :: Scientific/Engineering ",
         "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
@@ -75,9 +76,8 @@ setup(
     install_requires=[
         "typing_extensions",
         "numpy~=1.15",
-        "pyqt5~=5.9",
         "pyqtgraph~=0.11",
-        "dvg-ringbuffer~=1.0"
+        "dvg-ringbuffer~=1.0",
     ],
     extras_require={},
 )

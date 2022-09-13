@@ -1,9 +1,14 @@
 Changelog
 =========
 
+3.2.0 (2022-09-13)
+------------------
+* Added support for PyQt5, PyQt6, PySide2 and PySide6 as suggested via a pull
+  request by Mathijs van Gorcum (https://github.com/mvgorcum).
+
 3.1.0 (2021-05-10)
 ------------------
-* Removed redundant argument `capacity` from init `PlotCurve()`. It is
+* Removed redundant argument ``capacity`` from init ``PlotCurve()``. It is
   not using a ringbuffer and, hence, does not need a capacity.
 
 3.0.1 (2020-08-07)

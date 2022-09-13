@@ -1,11 +1,62 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Mechanism to support both PyQt and PySide
+# -----------------------------------------
+import os
 import sys
 
+QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
+PYSIDE = "PySide"
+PYSIDE2 = "PySide2"
+PYSIDE6 = "PySide6"
+PYQT4 = "PyQt4"
+PYQT5 = "PyQt5"
+PYQT6 = "PyQt6"
+
+# pylint: disable=import-error, no-name-in-module
+# fmt: off
+if QT_LIB is None:
+    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+    for lib in libOrder:
+        if lib in sys.modules:
+            QT_LIB = lib
+            break
+
+if QT_LIB is None:
+    for lib in libOrder:
+        try:
+            __import__(lib)
+            QT_LIB = lib
+            break
+        except ImportError:
+            pass
+
+if QT_LIB is None:
+    raise Exception(
+        "DvG_PyQtGraph_ThreadSafe requires PyQt5, PyQt6, PySide2 or PySide6; "
+        "none of these packages could be imported."
+    )
+
+if QT_LIB == PYQT5:
+    from PyQt5 import QtCore, QtWidgets as QtWid           # type: ignore
+    from PyQt5.QtCore import pyqtSlot as Slot              # type: ignore
+elif QT_LIB == PYQT6:
+    from PyQt6 import QtCore, QtWidgets as QtWid           # type: ignore
+    from PyQt6.QtCore import pyqtSlot as Slot              # type: ignore
+elif QT_LIB == PYSIDE2:
+    from PySide2 import QtCore, QtWidgets as QtWid         # type: ignore
+    from PySide2.QtCore import Slot                        # type: ignore
+elif QT_LIB == PYSIDE6:
+    from PySide6 import QtCore, QtWidgets as QtWid         # type: ignore
+    from PySide6.QtCore import Slot                        # type: ignore
+
+# fmt: on
+# pylint: enable=import-error, no-name-in-module
+# \end[Mechanism to support both PyQt and PySide]
+# -----------------------------------------------
+
 import numpy as np
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets as QtWid
 import pyqtgraph as pg
 
 try:
@@ -88,7 +139,9 @@ class MainWindow(QtWid.QWidget):
         self.plot_2.setLabel("bottom", text="x", **p)
         self.plot_2.setLabel("left", text="y", **p)
         self.plot_2.setRange(
-            xRange=[-1.1, 1.1], yRange=[-1.1, 1.1], disableAutoRange=True,
+            xRange=[-1.1, 1.1],
+            yRange=[-1.1, 1.1],
+            disableAutoRange=True,
         )
 
         capacity = round(CHART_HISTORY_TIME * Fs)
@@ -128,12 +181,12 @@ class MainWindow(QtWid.QWidget):
 
         # 'Obtained rates'
         self.qlbl_DAQ_rate = QtWid.QLabel("")
-        self.qlbl_DAQ_rate.setAlignment(QtCore.Qt.AlignRight)
+        self.qlbl_DAQ_rate.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         self.qlbl_DAQ_rate.setMinimumWidth(50)
         self.qlbl_chart_rate = QtWid.QLabel("")
-        self.qlbl_chart_rate.setAlignment(QtCore.Qt.AlignRight)
+        self.qlbl_chart_rate.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         self.qlbl_num_points = QtWid.QLabel("")
-        self.qlbl_num_points.setAlignment(QtCore.Qt.AlignRight)
+        self.qlbl_num_points.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
 
         # fmt: off
         grid_rates = QtWid.QGridLayout()
@@ -146,7 +199,7 @@ class MainWindow(QtWid.QWidget):
         grid_rates.addWidget(QtWid.QLabel("drawn:"), 2, 0)
         grid_rates.addWidget(self.qlbl_num_points  , 2, 1)
         grid_rates.addWidget(QtWid.QLabel("pnts")  , 2, 2)
-        grid_rates.setAlignment(QtCore.Qt.AlignTop)
+        grid_rates.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         # fmt: on
 
         # 'Legend'
@@ -221,7 +274,7 @@ class MainWindow(QtWid.QWidget):
     #   Handle controls
     # --------------------------------------------------------------------------
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def process_qpbt_clear_chart(self):
         str_msg = "Are you sure you want to clear the chart?"
         reply = QtWid.QMessageBox.warning(
@@ -236,7 +289,7 @@ class MainWindow(QtWid.QWidget):
             for tscurve in self.tscurves:
                 tscurve.clear()
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def process_qpbt_pause_chart(self):
         if self.paused:
             self.qpbt_pause_chart.setText("Pause")
@@ -258,7 +311,7 @@ class MainWindow(QtWid.QWidget):
 
         self.qlbl_num_points.setText("%s" % f"{(num_points):,}")
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def update_curves(self):
         for tscurve in self.tscurves:
             tscurve.update()
@@ -269,7 +322,7 @@ class MainWindow(QtWid.QWidget):
                 [self.tscurve_3.curve.yData[-1]],
             )
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def update_charts(self):
         # Keep track of the obtained chart rate
         if not self.qet_chart.isValid():
@@ -295,7 +348,7 @@ class MainWindow(QtWid.QWidget):
             self.update_num_points_drawn()
             self.update_curves()
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def update_GUI(self):
         self.qlbl_DAQ_rate.setText("%.1f" % qdev.obtained_DAQ_rate_Hz)
 
@@ -304,7 +357,7 @@ class MainWindow(QtWid.QWidget):
 # ------------------------------------------------------------------------------
 
 
-@QtCore.pyqtSlot()
+@Slot()
 def about_to_quit():
     qdev.quit()
     timer_chart.stop()
@@ -354,9 +407,12 @@ if __name__ == "__main__":
     qdev.start()
 
     # Chart refresh timer
-    timer_chart = QtCore.QTimer(timerType=QtCore.Qt.PreciseTimer)
+    timer_chart = QtCore.QTimer(timerType=QtCore.Qt.TimerType.PreciseTimer)
     timer_chart.timeout.connect(window.update_charts)
     timer_chart.start(CHART_DRAW_INTERVAL_MS)
 
     window.show()
-    sys.exit(app.exec_())
+    if QT_LIB in (PYQT5, PYSIDE2):
+        sys.exit(app.exec_())
+    else:
+        sys.exit(app.exec())

@@ -71,8 +71,8 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "10-05-2021"
-__version__ = "3.1.0"
+__date__ = "13-09-2022"
+__version__ = "3.2.0"
 
 from functools import partial
 from typing import Union, Tuple, List, Optional
@@ -82,8 +82,65 @@ try:
 except:  # pylint: disable=bare-except
     from typing_extensions import TypedDict
 
+# Mechanism to support both PyQt and PySide
+# -----------------------------------------
+# This is a modified version of what happens inside the PyQtGraph library, see
+# file `pyqtgraph/Qt/__init__.py`, https://github.com/pyqtgraph/pyqtgraph/blob/59f0d6e612dc6aacd365de8244a4ebeb68016876/pyqtgraph/Qt/__init__.py
+# Below code was suggested by Mathijs van Gorcum (https://github.com/mvgorcum)
+import os
+import sys
+
+QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
+PYSIDE = "PySide"
+PYSIDE2 = "PySide2"
+PYSIDE6 = "PySide6"
+PYQT4 = "PyQt4"
+PYQT5 = "PyQt5"
+PYQT6 = "PyQt6"
+
+# pylint: disable=import-error, no-name-in-module
+# fmt: off
+if QT_LIB is None:
+    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+    for lib in libOrder:
+        if lib in sys.modules:
+            QT_LIB = lib
+            break
+
+if QT_LIB is None:
+    for lib in libOrder:
+        try:
+            __import__(lib)
+            QT_LIB = lib
+            break
+        except ImportError:
+            pass
+
+if QT_LIB is None:
+    raise Exception(
+        "DvG_PyQtGraph_ThreadSafe requires PyQt5, PyQt6, PySide2 or PySide6; "
+        "none of these packages could be imported."
+    )
+
+if QT_LIB == PYQT5:
+    from PyQt5 import QtCore, QtGui, QtWidgets as QtWid    # type: ignore
+    from PyQt5.QtCore import pyqtSlot as Slot              # type: ignore
+elif QT_LIB == PYQT6:
+    from PyQt6 import QtCore, QtGui, QtWidgets as QtWid    # type: ignore
+    from PyQt6.QtCore import pyqtSlot as Slot              # type: ignore
+elif QT_LIB == PYSIDE2:
+    from PySide2 import QtCore, QtGui, QtWidgets as QtWid  # type: ignore
+    from PySide2.QtCore import Slot                        # type: ignore
+elif QT_LIB == PYSIDE6:
+    from PySide6 import QtCore, QtGui, QtWidgets as QtWid  # type: ignore
+    from PySide6.QtCore import Slot                        # type: ignore
+
+# fmt: on
+# pylint: enable=import-error, no-name-in-module
+# \end[Mechanism to support both PyQt and PySide]
+# -----------------------------------------------
+
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets as QtWid
 import pyqtgraph as pg
 
 from dvg_ringbuffer import RingBuffer
@@ -173,8 +230,7 @@ class ThreadSafeCurve(object):
         self._snapshot_y = np.array([])
 
     def appendData(self, x, y):
-        """Append a single (x, y)-data point to the ring buffer.
-        """
+        """Append a single (x, y)-data point to the ring buffer."""
         if self._use_ringbuffer:
             locker = QtCore.QMutexLocker(self._mutex)
             self._buffer_x.append(x)
@@ -182,8 +238,7 @@ class ThreadSafeCurve(object):
             locker.unlock()
 
     def extendData(self, x_list, y_list):
-        """Extend the ring buffer with a list of (x, y)-data points.
-        """
+        """Extend the ring buffer with a list of (x, y)-data points."""
         if self._use_ringbuffer:
             locker = QtCore.QMutexLocker(self._mutex)
             self._buffer_x.extend(x_list)
@@ -191,8 +246,7 @@ class ThreadSafeCurve(object):
             locker.unlock()
 
     def setData(self, x_list, y_list):
-        """Set the (x, y)-data of the regular array buffer.
-        """
+        """Set the (x, y)-data of the regular array buffer."""
         if not self._use_ringbuffer:
             locker = QtCore.QMutexLocker(self._mutex)
             self._buffer_x = x_list
@@ -273,10 +327,9 @@ class ThreadSafeCurve(object):
 
             self.curve.setData(x_finite, y_finite)  # , connect=connect)
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def clear(self):
-        """Clear the contents of the curve and redraw.
-        """
+        """Clear the contents of the curve and redraw."""
         locker = QtCore.QMutexLocker(self._mutex)
         if self._use_ringbuffer:
             self._buffer_x.clear()
@@ -289,8 +342,7 @@ class ThreadSafeCurve(object):
         self.update()
 
     def name(self):
-        """Get the name of the curve.
-        """
+        """Get the name of the curve."""
         return self.curve.name()
 
     def isVisible(self) -> bool:
@@ -459,7 +511,7 @@ class LegendSelect(QtCore.QObject):
         for idx, curve in enumerate(self._linked_curves):
             chkb = QtWid.QCheckBox(
                 text=curve.name(),
-                layoutDirection=QtCore.Qt.LeftToRight,
+                layoutDirection=QtCore.Qt.LayoutDirection.LeftToRight,
                 checked=curve.isVisible(),
             )
             self.chkbs.append(chkb)
@@ -475,12 +527,12 @@ class LegendSelect(QtCore.QObject):
             )
             self.painted_boxes.append(painted_box)
 
-            p = {"alignment": QtCore.Qt.AlignLeft}
+            p = {"alignment": QtCore.Qt.AlignmentFlag.AlignLeft}
             self.grid.addWidget(chkb, idx, 0, **p)
             self.grid.addWidget(painted_box, idx, 1)
             self.grid.setColumnStretch(0, 1)
             self.grid.setColumnStretch(1, 0)
-            self.grid.setAlignment(QtCore.Qt.AlignTop)
+            self.grid.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
 
         if not hide_toggle_button:
             self.qpbt_toggle = QtWid.QPushButton("Show / Hide all")
@@ -488,12 +540,12 @@ class LegendSelect(QtCore.QObject):
             self.grid.addWidget(self.qpbt_toggle, self.grid.rowCount(), 0, 1, 3)
             self.qpbt_toggle.clicked.connect(self.toggle)
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def _updateVisibility(self):
         for idx, chkb in enumerate(self.chkbs):
             self._linked_curves[idx].setVisible(chkb.isChecked())
 
-    @QtCore.pyqtSlot()
+    @Slot()
     def toggle(self):
         # First : If any checkbox is unchecked  --> check all
         # Second: If all checkboxes are checked --> uncheck all
@@ -567,7 +619,7 @@ class PlotManager(QtCore.QObject):
 
         # Will contain the full set of GUI elements:
         self.grid = QtWid.QGridLayout(spacing=1)
-        self.grid.setAlignment(QtCore.Qt.AlignTop)
+        self.grid.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
 
     class Presets(TypedDict):
         button_label: str
@@ -611,8 +663,6 @@ class PlotManager(QtCore.QObject):
             self.pbtns_presets.append(pbtn_preset)
 
     def perform_preset(self, idx: int):
-        """
-        """
         if self._presets_linked_plots is not None:
             for plot in self._presets_linked_plots:
                 plot.setXRange(*self._presets[idx]["x_axis_range"])
@@ -629,10 +679,8 @@ class PlotManager(QtCore.QObject):
     # --------------------------------------------------------------------------
 
     def add_autorange_buttons(
-        self, linked_plots: List[Union[pg.PlotItem, pg.ViewBox]],
+        self, linked_plots: List[Union[pg.PlotItem, pg.ViewBox]]
     ):
-        """
-        """
         if not isinstance(linked_plots, list):
             linked_plots = (linked_plots,)
         self._autorange_linked_plots = linked_plots
@@ -651,8 +699,6 @@ class PlotManager(QtCore.QObject):
         self.grid.addWidget(self.pbtn_autorange_y, row_idx, 1)
 
     def perform_fullrange(self):
-        """
-        """
         if self._autorange_linked_plots is not None:
             for plot in self._autorange_linked_plots:
                 # Momentarily ignore `clipToView`
@@ -670,8 +716,6 @@ class PlotManager(QtCore.QObject):
                     plot.setClipToView(True)
 
     def perform_autorange_x(self):
-        """
-        """
         if self._autorange_linked_plots is not None:
             for plot in self._autorange_linked_plots:
                 # Momentarily ignore `clipToView`
@@ -686,8 +730,6 @@ class PlotManager(QtCore.QObject):
                     plot.setClipToView(True)
 
     def perform_autorange_y(self):
-        """
-        """
         if self._autorange_linked_plots is not None:
             for plot in self._autorange_linked_plots:
                 plot.enableAutoRange("y", True)
@@ -697,10 +739,8 @@ class PlotManager(QtCore.QObject):
     # --------------------------------------------------------------------------
 
     def add_clear_button(
-        self, linked_curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]],
+        self, linked_curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]]
     ):
-        """
-        """
         if not isinstance(linked_curves, list):
             linked_curves = (linked_curves,)
         self._clear_linked_curves = linked_curves
@@ -713,8 +753,6 @@ class PlotManager(QtCore.QObject):
         self.grid.addWidget(self.pbtn_clear, self.grid.rowCount(), 0, 1, 2)
 
     def perform_clear(self):
-        """
-        """
         str_msg = "Are you sure you want to clear the plots?"
         reply = QtWid.QMessageBox.warning(
             self.parent(),
