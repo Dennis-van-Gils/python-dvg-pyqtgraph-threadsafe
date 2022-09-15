@@ -1,3 +1,17 @@
+GOAL
+----
+We test different versions of Python and PyQtGraph and test different QT
+libraries. 
+
+Two threads are set up. Thread one pushes data at 100 Hz into the measurement
+buffer. This thread has the upper priority. The other lower thread takes care
+of plotting this data consisting of 300.000 points at a max framerate of 50
+fps. 
+
+We measure CPU & GPU load and memory consumption and check whether the max of
+50 fps is reached for plotting while the DAQ is running at a stable 100 Hz.
+
+
 BENCHMARK
 ---------
 - Running: ``\demos\demo_pyqtgraph_threadsafe.py``
@@ -5,17 +19,6 @@ BENCHMARK
 - Intel Core i7 11900H, NVidia T1200, Win10 21H2
 - Display scaling set to 100%
 
-GOAL
-----
-Two threads are set up. Thread one pushes data at 100 Hz into the measurement
-buffer. This thread has the upper priority. The other lower thread takes care
-of plotting this data.
-
-We measure CPU & GPU load and memory consumption and check whether the max of
-50 fps is reached for plotting while the DAQ is running at a stable 100 Hz.
-
-We test different versions of Python and pyqtgraph and test different QT
-libraries.
 
 OPENGL SETTINGS
 ---------------
@@ -26,6 +29,7 @@ OPENGL SETTINGS
   pg.setConfigOptions(useOpenGL=True)
   pg.setConfigOptions(antialias=True)
   pg.setConfigOptions(enableExperimental=True)
+
 
 RESULTS
 -------
@@ -62,6 +66,7 @@ py39pyside6     not supported                   0.11.1
 py39pyqt6       ~30     4       228     44      0.12.4
 py39pyside6     ~30     4       230     44      0.12.4
 =============== ======= ======= ======= ======= ====================
+
 
 CONCLUSION
 ----------
