@@ -3,13 +3,13 @@ BENCHMARK
 We test different versions of Python and PyQtGraph and test different QT
 libraries. 
 
-Two threads are set up. Thread one pushes data at 100 Hz into the measurement
-buffer. This thread has the upper priority. The other lower thread takes care
-of plotting this data consisting of 300.000 points at a max framerate of 50
-fps. 
+Two threads are set up. Thread one pushes every 10 ms 100 samples into a
+ring buffer with a capacity of 300.000 samples. This thread has the upper
+priority. The other lower thread takes care of plotting the 300.000
+samples in the ring buffer at a max framerate of 50 fps. 
 
 We measure CPU & GPU load and memory consumption and check whether the max of
-50 fps is reached for plotting while the DAQ is running at a stable 100 Hz.
+50 fps is reached for plotting.
 
 
 CONDITIONS
