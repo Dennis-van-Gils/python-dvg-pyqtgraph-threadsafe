@@ -59,6 +59,15 @@ elif QT_LIB == PYSIDE6:
 import numpy as np
 import pyqtgraph as pg
 
+print("PyQtGraph v%s" % pg.__version__)
+try:
+    import dvg_monkeypatch_pyqtgraph  # pylint: disable=unused-import
+except ImportError:
+    pass
+else:
+    if pg.__version__ == "0.11.0":
+        print("+ dvg_monkeypatch_pyqtgraph")
+
 try:
     from dvg_qdeviceio import QDeviceIO
 except ImportError:
