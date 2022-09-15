@@ -58,10 +58,12 @@ QT_VERSION = (
 # \end[Mechanism to support both PyQt and PySide]
 # -----------------------------------------------
 
+import psutil
+import GPUtil
 import numpy as np
 import pyqtgraph as pg
 
-print("-" * 20)
+print("-" * 23)
 print(f"{QT_LIB:9s} | {QT_VERSION}")
 print(f"{'PyQtGraph':9s} | {pg.__version__}", end="")
 try:
@@ -88,16 +90,13 @@ if TRY_USING_OPENGL:
         pg.setConfigOptions(antialias=True)
         pg.setConfigOptions(enableExperimental=True)
 
-print("-" * 20)
+print("-" * 23)
+print(GPUtil.getGPUs()[0].name)
+print("-" * 23)
 
-try:
-    from dvg_qdeviceio import QDeviceIO
-except ImportError:
-    print("This demo requires `dvg-qdeviceio`. It can be installed with:")
-    print("  pip install dvg-qdeviceio")
-    sys.exit(0)
-
+from dvg_qdeviceio import QDeviceIO
 from dvg_pyqtgraph_threadsafe import (
+    ThreadSafeCurve,
     HistoryChartCurve,
     BufferedPlotCurve,
     LegendSelect,
@@ -110,9 +109,15 @@ pg.setConfigOption("foreground", "#EEE")
 
 # Constants
 Fs = 10000  # Sampling rate of the simulated data [Hz]
-WORKER_DAQ_INTERVAL_MS = round(1000 / 100)  # [ms]
-CHART_DRAW_INTERVAL_MS = round(1000 / 50)  # [ms]
+WORKER_DAQ_INTERVAL_MS = 10  # [ms]
+CHART_DRAW_INTERVAL_MS = 20  # [ms]
 CHART_HISTORY_TIME = 10  # 10 [s]
+
+# Keep track of the CPU load of this specific process
+# `logical=False` for i7-11900H seems to match better what is reported by Win11
+cpu_count = psutil.cpu_count(logical=True)
+os_process = psutil.Process(os.getpid())
+os_process.cpu_percent(interval=None)  # Prime the measurement
 
 # ------------------------------------------------------------------------------
 #   MainWindow
@@ -368,7 +373,7 @@ class MainWindow(QtWid.QWidget):
 
     @Slot()
     def update_GUI(self):
-        self.qlbl_DAQ_rate.setText("%.1f" % qdev.obtained_DAQ_rate_Hz)
+        self.qlbl_DAQ_rate.setText("%.1f" % fake_qdev.obtained_DAQ_rate_Hz)
 
 
 # ------------------------------------------------------------------------------
@@ -377,26 +382,116 @@ class MainWindow(QtWid.QWidget):
 
 @Slot()
 def about_to_quit():
-    qdev.quit()
+    print("\n")
+    benchmark_qdev.quit()
+    fake_qdev.quit()
     timer_chart.stop()
 
 
-def DAQ_function():
-    if window.tscurve_1.size[0] == 0:
-        x_0 = 0
-    else:
-        # Pick up the previously last phase of the sine
-        x_0 = window.tscurve_1._buffer_x[-1]  # pylint: disable=protected-access
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-    x = (1 + np.arange(WORKER_DAQ_INTERVAL_MS * Fs / 1e3)) / Fs + x_0
-    y_sin = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
-    y_cos = np.cos(2 * np.pi * 0.09 * np.unwrap(x))
 
-    window.tscurve_1.extendData(x, y_sin)
-    window.tscurve_2.extendData(x, y_cos)
-    window.tscurve_3.extendData(y_sin, y_cos)
+class FakeDevice:
+    """Simulates a data acquisition (DAQ) device that will generate data at a
+    fixed sample rate. It will push the data into the passed `ThreadSaveCurve`
+    instances.
+    """
 
-    return True
+    def __init__(
+        self,
+        tscurve_1_: ThreadSafeCurve,
+        tscurve_2_: ThreadSafeCurve,
+        tscurve_3_: ThreadSafeCurve,
+    ):
+        self.name = "FakeDevice"
+        self.is_alive = True
+        self.tscurve_1 = tscurve_1_
+        self.tscurve_2 = tscurve_2_
+        self.tscurve_3 = tscurve_3_
+
+    def generate_data(self):
+        if self.tscurve_1.size[0] == 0:
+            x_0 = 0
+        else:
+            # Pick up the previously last phase of the sine
+            # fmt: off
+            x_0 = self.tscurve_1._buffer_x[-1]  # pylint: disable=protected-access
+            # fmt: on
+
+        x = (1 + np.arange(WORKER_DAQ_INTERVAL_MS * Fs / 1e3)) / Fs + x_0
+        y_sin = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
+        y_cos = np.cos(2 * np.pi * 0.09 * np.unwrap(x))
+
+        self.tscurve_1.extendData(x, y_sin)
+        self.tscurve_2.extendData(x, y_cos)
+        self.tscurve_3.extendData(y_sin, y_cos)
+
+        return True
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+
+class BenchmarkStatsDevice:
+    """Simulates a device that keeps track of the benchmark stats"""
+
+    def __init__(self):
+        self.name = "BenchmarkStats"
+        self.is_alive = True
+        self.iter = 0
+        self.buf_size = 30
+        self.fps_min = np.nan
+        self.fps_max = np.nan
+        self.buf_fps = np.full(self.buf_size, np.nan)
+        self.buf_cpu_mem = np.full(self.buf_size, np.nan)
+        self.buf_cpu_load = np.full(self.buf_size, np.nan)
+        self.buf_gpu_load = np.full(self.buf_size, np.nan)
+        self.startup_iters = 10  # Number of iters to ignore at the start
+
+    def measure_stats(self):
+        # Instantaneous frames-per-second
+        fps = window.obtained_chart_rate_Hz  # atomic, hence safe to access
+
+        # Instantaneous CPU load and memory consumption of the Python process
+        cpu_load = os_process.cpu_percent(interval=None) / cpu_count
+        cpu_mem = os_process.memory_info().rss / 2**20
+
+        # Instantaneous system-wide GPU load
+        gpu_load = GPUtil.getGPUs()[0].load * 100
+
+        # FPS extrema
+        if self.iter > self.startup_iters:
+            self.fps_min = np.nanmin((self.fps_min, fps))
+            self.fps_max = np.nanmax((self.fps_max, fps))
+
+        msg = f"{self.iter:4d} | "
+        msg += f"{fps:4.1f} | {self.fps_min:4.1f} | {self.fps_max:4.1f} | "
+        msg += f"{cpu_mem:6.0f} | {cpu_load:4.1f} | {gpu_load:4.1f}"
+
+        # Moving average
+        buf_idx = self.iter % self.buf_size
+        self.buf_fps[buf_idx] = fps
+        self.buf_cpu_mem[buf_idx] = cpu_mem
+        self.buf_cpu_load[buf_idx] = cpu_load
+        self.buf_gpu_load[buf_idx] = gpu_load
+
+        if self.iter >= self.buf_size + self.startup_iters:
+            avg_fps = np.nanmean(self.buf_fps)
+            avg_cpu_mem = np.nanmean(self.buf_cpu_mem)
+            avg_cpu_load = np.nanmean(self.buf_cpu_load)
+            avg_gpu_load = np.nanmean(self.buf_gpu_load)
+            msg += f"     {avg_fps:4.1f}{avg_cpu_mem:6.0f}"
+            msg += f" {avg_cpu_load:6.1f} {avg_gpu_load:6.1f}        "
+
+        else:
+            msg += "     waiting for moving average... "
+            msg += f"{(self.buf_size + self.startup_iters - self.iter):2d}"
+
+        print(msg, end="\r")
+        self.iter += 1
+        return True
 
 
 # ------------------------------------------------------------------------------
@@ -409,27 +504,46 @@ if __name__ == "__main__":
 
     window = MainWindow()
 
-    # Fake a device that generates data at a sampling rate of `Fs` Hz. The
-    # data gets generated and transferred to our HistoryChartCurve-instance from
-    # out of a separate thread. This is taken care of by QDeviceIO.
-    class FakeDevice:
-        def __init__(self):
-            self.name = "FakeDevice"
-            self.is_alive = True
-
-    qdev = QDeviceIO(dev=FakeDevice())
-    qdev.create_worker_DAQ(
-        DAQ_interval_ms=WORKER_DAQ_INTERVAL_MS, DAQ_function=DAQ_function
+    # FakeDevice:
+    #   Simulates a data acquisition (DAQ) device that will generate data at a
+    #   fixed sample rate. It will push the data into the passed
+    #   `ThreadSaveCurve` instances.
+    # QDeviceIO:
+    #   Creates and manages a new thread for `fake_dev`. A worker will
+    #   perdiocally activate `fake_dev` from out of this new thread.
+    fake_dev = FakeDevice(window.tscurve_1, window.tscurve_2, window.tscurve_3)
+    fake_qdev = QDeviceIO(fake_dev)
+    fake_qdev.create_worker_DAQ(
+        DAQ_interval_ms=WORKER_DAQ_INTERVAL_MS,
+        DAQ_function=fake_dev.generate_data,
     )
-    qdev.signal_DAQ_updated.connect(window.update_GUI)
-    qdev.start()
+    fake_qdev.signal_DAQ_updated.connect(window.update_GUI)
+    fake_qdev.start()
+
+    # BenchmarkStatsDevice:
+    #   Simulates a device that keeps track of the benchmark stats.
+    # QDeviceIO:
+    #   Creates and manages a new thread for `benchmark_dev`. A worker will
+    #   perdiocally activate `benchmark_dev` from out of  this new thread.
+    benchmark_dev = BenchmarkStatsDevice()
+    benchmark_qdev = QDeviceIO(benchmark_dev)
+    benchmark_qdev.create_worker_DAQ(
+        DAQ_interval_ms=1000,
+        DAQ_function=benchmark_dev.measure_stats,
+    )
+    benchmark_qdev.start()
 
     # Chart refresh timer
     timer_chart = QtCore.QTimer(timerType=QtCore.Qt.TimerType.PreciseTimer)
     timer_chart.timeout.connect(window.update_charts)
     timer_chart.start(CHART_DRAW_INTERVAL_MS)
 
+    print(
+        "   # |  FPS |  MIN |  MAX | RAM MB | CPU% | GPU%     "
+        "<FPS> <RAM> <CPU%> <GPU%>"
+    )
     window.show()
+
     if QT_LIB in (PYQT5, PYSIDE2):
         sys.exit(app.exec_())
     else:

@@ -1,12 +1,12 @@
 BENCHMARK
 ---------
 We test different versions of Python and PyQtGraph and test different QT
-libraries. 
+libraries.
 
 Two threads are set up. Thread one pushes every 10 ms 100 samples into a
 ring buffer with a capacity of 300.000 samples. This thread has the upper
 priority. The other lower thread takes care of plotting the 300.000
-samples in the ring buffer at a max framerate of 50 fps. 
+samples in the ring buffer at a max framerate of 50 fps.
 
 We measure CPU & GPU load and memory consumption and check whether the max of
 50 fps is reached for plotting.
@@ -16,7 +16,9 @@ CONDITIONS
 ----------
 - Running: ``\demos\demo_pyqtgraph_threadsafe.py``
 - Laptop_236G5FR3, Lenovo Thinkpad P15v Gen2
-- Intel Core i7 11900H, NVidia T1200, Win10 21H2
+- Intel Core i7 11900H, 32 GB DDR4-3200, Win11 21H2
+- GPU 0: Integrated Intel UHD
+- GPU 1: NVidia Quadro T1200
 - Display scaling set to 100%
 
 
@@ -33,6 +35,11 @@ OPENGL SETTINGS
 
 RESULTS
 -------
+
+NOTE: These results are obtained *from the wrong GPU!* They are based on GPU 0,
+which is the integrated graphics adapter (Intel UHD). We have to select GPU 1
+as the preferred graphics processor in NVIDIA Control Panel to test the Quadro
+T1200.
 
 =============== ======= ======= ======= ======= ====================
 Python & QT lib FPS     CPU     Mem     GPU     pyqtgraph
@@ -76,9 +83,15 @@ older ``v0.11`` seems superior in speed and memory, but can only support *PyQt5*
 and *PySide2*, not *PyQt6* and *PySide6*. Whereas ``v0.12.4`` does support
 *PyQt6* and *PySide6* but can't seem to match the performance of ``v0.11``.
 
-Dennis van Gils
 
-15-09-2022
+| **Dennis van Gils**
+| **16-09-2022**
+|
+| P.S. The ``v0.11.0`` monkeypatch and details can be found here https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-monkeypatch
 
 
-P.S. The ``v0.11.0`` monkeypatch and details can be found here https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-monkeypatch
+TODO
+----
+Automate the benchmark using ``cpu_proc = self.proc.cpu_percent(interval=None) / self.cpu_count``
+and https://github.com/anderskm/gputil. Also, all QT-libs can be installed in
+a single environment and be specifically imported *before* ``import pyqtgraph``.
