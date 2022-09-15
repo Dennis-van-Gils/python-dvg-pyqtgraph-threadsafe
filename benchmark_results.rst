@@ -1,5 +1,5 @@
-GOAL
-----
+BENCHMARK
+---------
 We test different versions of Python and PyQtGraph and test different QT
 libraries. 
 
@@ -12,8 +12,8 @@ We measure CPU & GPU load and memory consumption and check whether the max of
 50 fps is reached for plotting while the DAQ is running at a stable 100 Hz.
 
 
-BENCHMARK
----------
+CONDITIONS
+----------
 - Running: ``\demos\demo_pyqtgraph_threadsafe.py``
 - Laptop_236G5FR3, Lenovo Thinkpad P15v Gen2
 - Intel Core i7 11900H, NVidia T1200, Win10 21H2
