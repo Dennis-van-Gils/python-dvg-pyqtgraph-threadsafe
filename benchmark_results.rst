@@ -72,11 +72,12 @@ CONCLUSION
 ----------
 
 The PyQtGraph version seems to have a major impact on drawing performance. The
-older ``v0.11`` seems superior in speed and memory, but can only support ``PyQt5``
-and ``PySide2``, not ``PyQt6`` and ``PySide6``. Whereas ``v0.12.4`` does support
-``PyQt6`` and ``PySide6`` but can't seem to match the performance of ``v0.11``.
+older ``v0.11`` seems superior in speed and memory, but can only support *PyQt5*
+and *PySide2*, not *PyQt6* and *PySide6*. Whereas ``v0.12.4`` does support
+*PyQt6* and *PySide6* but can't seem to match the performance of ``v0.11``.
 
 Dennis van Gils
+
 15-09-2022
 
 
