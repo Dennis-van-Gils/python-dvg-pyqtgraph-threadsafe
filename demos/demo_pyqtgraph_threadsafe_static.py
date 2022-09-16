@@ -7,10 +7,8 @@ import os
 import sys
 
 QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
-PYSIDE = "PySide"
 PYSIDE2 = "PySide2"
 PYSIDE6 = "PySide6"
-PYQT4 = "PyQt4"
 PYQT5 = "PyQt5"
 PYQT6 = "PyQt6"
 
@@ -55,8 +53,6 @@ elif QT_LIB == PYSIDE6:
 import numpy as np
 import pyqtgraph as pg
 
-from dvg_pyqtgraph_threadsafe import PlotCurve
-
 TRY_USING_OPENGL = True
 if TRY_USING_OPENGL:
     try:
@@ -69,6 +65,8 @@ if TRY_USING_OPENGL:
         pg.setConfigOptions(useOpenGL=True)
         pg.setConfigOptions(antialias=True)
         pg.setConfigOptions(enableExperimental=True)
+
+from dvg_pyqtgraph_threadsafe import PlotCurve
 
 # ------------------------------------------------------------------------------
 #   MainWindow
@@ -101,8 +99,6 @@ class MainWindow(QtWid.QWidget):
 
         x = np.array([0, 1, 2, 3, 4])
         y = np.array([0, 1, np.nan, 3, 3])
-        # x = np.array([np.nan] * 5)
-        # y = np.array([np.nan] * 5)
 
         self.tscurve.setData(x, y)
         self.tscurve.update()
