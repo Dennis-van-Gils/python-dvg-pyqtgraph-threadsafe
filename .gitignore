@@ -2,6 +2,7 @@
 last_used_port.txt
 config/
 .vscode/
+log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
