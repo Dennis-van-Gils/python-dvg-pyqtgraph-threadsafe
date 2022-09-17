@@ -1,7 +1,29 @@
+Running the benchmark
+=====================
+
+A single benchmark can be run by calling::
+
+  python benchmark.py [optional argument]
+  
+where the optional argument can be ``PyQt5``, ``PyQt6``,
+``PySide2`` or ``PySide6`` to enforce using a specific
+Python Qt library.
+
+It is possible to have PyQt5, PyQt6, PySide2 and PySide6 *all* installed
+in the same python environment.
+
+Automated benchmarks
+====================
+
+If you use Anaconda Python then I have scripts available to set up the
+Python environments for benchmarking, see `<create_conda_envs.bat>`_.
+With this set up, you can run the full benchmark matrix found in
+`<automate_benchmarks.bat>`_.
+
 Graphics card preference
 ========================
 
-When your system has both an integrated GPU and an external one, please make
+When your system has both an integrated GPU and a dedicated one, please make
 sure to tell the OS to favor the correct GPU.
 
 In Windows you must go to the 'Graphics settings' configuration page, add an
