@@ -1,28 +1,50 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=invalid-name
+
+# Constants
+Fs = 10000  # Sampling rate of the simulated data [Hz]
+WORKER_DAQ_INTERVAL_MS = 10  # [ms]
+CHART_DRAW_INTERVAL_MS = 20  # [ms]
+CHART_HISTORY_TIME = 10  # 10 [s]
+
+# Benchmark constants
+BENCH_INTERVAL_MS = 1000  # [ms]
+BENCH_BUF_SIZE = 60  # Buffer size to calculate a moving average
+BENCH_ITER_STARTUP = 10  # Number of iters to ignore at the start (settling)
+BENCH_ITER_EXIT = 72  # Close app at this iter
+BENCH_LOG_FILE = "log.txt"
 
 # Mechanism to support both PyQt and PySide
 # -----------------------------------------
 import os
 import sys
 
-QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
-PYSIDE2 = "PySide2"
-PYSIDE6 = "PySide6"
 PYQT5 = "PyQt5"
 PYQT6 = "PyQt6"
+PYSIDE2 = "PySide2"
+PYSIDE6 = "PySide6"
+QT_LIB_ORDER = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
+
+# Parse optional cli argument to enfore a QT_LIB
+# cli example: python benchmark.py pyside6
+if len(sys.argv) > 1:
+    arg1 = str(sys.argv[1]).upper()
+    for i, lib in enumerate(QT_LIB_ORDER):
+        if arg1 == lib.upper():
+            QT_LIB = lib
+            break
 
 # pylint: disable=import-error, no-name-in-module, c-extension-no-member
-# fmt: off
 if QT_LIB is None:
-    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
-    for lib in libOrder:
+    for lib in QT_LIB_ORDER:
         if lib in sys.modules:
             QT_LIB = lib
             break
 
 if QT_LIB is None:
-    for lib in libOrder:
+    for lib in QT_LIB_ORDER:
         try:
             __import__(lib)
             QT_LIB = lib
@@ -31,11 +53,13 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
+    this_file = __file__.split(os.sep)[-1]
     raise Exception(
-        "DvG_PyQtGraph_ThreadSafe requires PyQt5, PyQt6, PySide2 or PySide6; "
+        f"{this_file} requires PyQt5, PyQt6, PySide2 or PySide6; "
         "none of these packages could be imported."
     )
 
+# fmt: off
 if QT_LIB == PYQT5:
     from PyQt5 import QtCore, QtWidgets as QtWid           # type: ignore
     from PyQt5.QtCore import pyqtSlot as Slot              # type: ignore
@@ -48,51 +72,67 @@ elif QT_LIB == PYSIDE2:
 elif QT_LIB == PYSIDE6:
     from PySide6 import QtCore, QtWidgets as QtWid         # type: ignore
     from PySide6.QtCore import Slot                        # type: ignore
+# fmt: on
 
 QT_VERSION = (
     QtCore.QT_VERSION_STR if QT_LIB in (PYQT5, PYQT6) else QtCore.__version__
 )
 
-# fmt: on
 # pylint: enable=import-error, no-name-in-module, c-extension-no-member
 # \end[Mechanism to support both PyQt and PySide]
 # -----------------------------------------------
 
+import platform
 import psutil
 import GPUtil
 import numpy as np
 import pyqtgraph as pg
 
-print("-" * 23)
-print(f"{QT_LIB:9s} | {QT_VERSION}")
-print(f"{'PyQtGraph':9s} | {pg.__version__}", end="")
+PYQTGRAPH_MONKEYPATCH_APPLIED = False
 try:
     import dvg_monkeypatch_pyqtgraph  # pylint: disable=unused-import
 except ImportError:
     pass
 else:
     if pg.__version__ == "0.11.0":
-        print(" + dvg_monkeypatch_pyqtgraph", end="")
-print()
+        PYQTGRAPH_MONKEYPATCH_APPLIED = True
 
 TRY_USING_OPENGL = True
+USING_OPENGL = False
 if TRY_USING_OPENGL:
     try:
         import OpenGL.GL as gl  # pylint: disable=unused-import
     except ImportError:
-        print("OpenGL acceleration: Disabled")
-        print("To install: `conda install pyopengl` or `pip install pyopengl`")
+        pass
     else:
         from OpenGL.version import __version__ as gl_version
 
-        print(f"{'PyOpenGL':9s} | {gl_version}")
         pg.setConfigOptions(useOpenGL=True)
         pg.setConfigOptions(antialias=True)
         pg.setConfigOptions(enableExperimental=True)
+        USING_OPENGL = True
 
-print("-" * 23)
-print(GPUtil.getGPUs()[0].name)
-print("-" * 23)
+# Logging
+cur_date_time = QtCore.QDateTime.currentDateTime()
+log_msg = (
+    f"{'':-<{22}s}{cur_date_time.toString('yyMMdd_HHmmss')}\n"
+    f"{'Python':9s} | {sys.version}\n"
+    f"{QT_LIB:9s} | {QT_VERSION}\n"
+    f"{'PyQtGraph':9s} | {pg.__version__}"
+)
+log_msg += " + monkeypatch\n" if PYQTGRAPH_MONKEYPATCH_APPLIED else "\n"
+log_msg += f"{'PyOpenGL':9s} | "
+log_msg += f"{gl_version}\n" if USING_OPENGL else "disabled\n"
+log_msg += (
+    f"{'Platform':9s} | {platform.platform()}\n"
+    f"{'CPU':9s} | {platform.processor()}\n"
+    f"{'GPU':9s} | {GPUtil.getGPUs()[0].name}\n"
+    f"{'':-<{35}s}\n"
+)
+for line in log_msg:
+    print(line, end="")
+with open(BENCH_LOG_FILE, "a", encoding="UTF8") as f:
+    f.writelines(log_msg)
 
 from dvg_qdeviceio import QDeviceIO
 from dvg_pyqtgraph_threadsafe import (
@@ -106,12 +146,6 @@ from dvg_pyqtgraph_threadsafe import (
 # Global pyqtgraph configuration
 # pg.setConfigOptions(leftButtonPan=False)
 pg.setConfigOption("foreground", "#EEE")
-
-# Constants
-Fs = 10000  # Sampling rate of the simulated data [Hz]
-WORKER_DAQ_INTERVAL_MS = 10  # [ms]
-CHART_DRAW_INTERVAL_MS = 20  # [ms]
-CHART_HISTORY_TIME = 10  # 10 [s]
 
 # Keep track of the CPU load of this specific process
 # `logical=False` for i7-11900H seems to match better what is reported by Win11
@@ -129,7 +163,7 @@ class MainWindow(QtWid.QWidget):
         super().__init__(parent, **kwargs)
 
         self.setGeometry(350, 50, 1200, 660)
-        self.setWindowTitle("Demo: dvg_pyqtgraph_threadsafe")
+        self.setWindowTitle(f"Benchmark: {QT_LIB}, PyQtGraph {pg.__version__}")
 
         # Keep track of the obtained chart refresh rate
         self.obtained_chart_rate_Hz = np.nan
@@ -383,9 +417,12 @@ class MainWindow(QtWid.QWidget):
 @Slot()
 def about_to_quit():
     print("\n")
+    app.processEvents()
     benchmark_qdev.quit()
     fake_qdev.quit()
+    app.processEvents()
     timer_chart.stop()
+    print()
 
 
 # ------------------------------------------------------------------------------
@@ -435,61 +472,128 @@ class FakeDevice:
 
 
 class BenchmarkStatsDevice:
-    """Simulates a device that keeps track of the benchmark stats"""
+    """Simulates a device that keeps track of the benchmark stats and prints
+    this to the terminal"""
 
     def __init__(self):
         self.name = "BenchmarkStats"
         self.is_alive = True
+
         self.iter = 0
-        self.buf_size = 30
+        self.buf_fps = np.full(BENCH_BUF_SIZE, np.nan)
+        self.buf_cpu_mem = np.full(BENCH_BUF_SIZE, np.nan)
+        self.buf_cpu_load = np.full(BENCH_BUF_SIZE, np.nan)
+        self.buf_gpu_load = np.full(BENCH_BUF_SIZE, np.nan)
+        self.avg_fps = np.nan
+        self.avg_cpu_mem = np.nan
+        self.avg_cpu_load = np.nan
+        self.avg_gpu_load = np.nan
         self.fps_min = np.nan
         self.fps_max = np.nan
-        self.buf_fps = np.full(self.buf_size, np.nan)
-        self.buf_cpu_mem = np.full(self.buf_size, np.nan)
-        self.buf_cpu_load = np.full(self.buf_size, np.nan)
-        self.buf_gpu_load = np.full(self.buf_size, np.nan)
-        self.startup_iters = 10  # Number of iters to ignore at the start
 
     def measure_stats(self):
-        # Instantaneous frames-per-second
-        fps = window.obtained_chart_rate_Hz  # atomic, hence safe to access
-
-        # Instantaneous CPU load and memory consumption of the Python process
+        # fps     : Instantaneous frames-per-second
+        # cpu_load: Instantaneous CPU load of the Python process
+        # cpu_mem : Instantaneous memory consumption of the Python process
+        # gpu_load: Instantaneous system-wide GPU load
+        fps = window.obtained_chart_rate_Hz  # Atomic, hence safe to access
         cpu_load = os_process.cpu_percent(interval=None) / cpu_count
         cpu_mem = os_process.memory_info().rss / 2**20
-
-        # Instantaneous system-wide GPU load
         gpu_load = GPUtil.getGPUs()[0].load * 100
 
         # FPS extrema
-        if self.iter > self.startup_iters:
+        if self.iter > BENCH_ITER_STARTUP:
             self.fps_min = np.nanmin((self.fps_min, fps))
             self.fps_max = np.nanmax((self.fps_max, fps))
 
-        msg = f"{self.iter:4d} | "
-        msg += f"{fps:4.1f} | {self.fps_min:4.1f} | {self.fps_max:4.1f} | "
-        msg += f"{cpu_mem:6.0f} | {cpu_load:4.1f} | {gpu_load:4.1f}"
+        # Terminal info
+        msg = (
+            f"{self.iter:4d} | "
+            f"{fps:4.1f} | {self.fps_min:4.1f} | {self.fps_max:4.1f} | "
+            f"{cpu_mem:6.0f} | {cpu_load:4.1f} | {gpu_load:4.1f}"
+        )
 
         # Moving average
-        buf_idx = self.iter % self.buf_size
+        buf_idx = self.iter % BENCH_BUF_SIZE
         self.buf_fps[buf_idx] = fps
         self.buf_cpu_mem[buf_idx] = cpu_mem
         self.buf_cpu_load[buf_idx] = cpu_load
         self.buf_gpu_load[buf_idx] = gpu_load
 
-        if self.iter >= self.buf_size + self.startup_iters:
-            avg_fps = np.nanmean(self.buf_fps)
-            avg_cpu_mem = np.nanmean(self.buf_cpu_mem)
-            avg_cpu_load = np.nanmean(self.buf_cpu_load)
-            avg_gpu_load = np.nanmean(self.buf_gpu_load)
-            msg += f"     {avg_fps:4.1f}{avg_cpu_mem:6.0f}"
-            msg += f" {avg_cpu_load:6.1f} {avg_gpu_load:6.1f}        "
-
+        if self.iter >= BENCH_BUF_SIZE + BENCH_ITER_STARTUP:
+            self.avg_fps = np.nanmean(self.buf_fps)
+            self.avg_cpu_mem = np.nanmean(self.buf_cpu_mem)
+            self.avg_cpu_load = np.nanmean(self.buf_cpu_load)
+            self.avg_gpu_load = np.nanmean(self.buf_gpu_load)
+            msg += (
+                f"     {self.avg_fps:4.1f}{self.avg_cpu_mem:6.0f}"
+                f" {self.avg_cpu_load:6.1f} {self.avg_gpu_load:6.1f}        "
+            )
         else:
-            msg += "     waiting for moving average... "
-            msg += f"{(self.buf_size + self.startup_iters - self.iter):2d}"
+            msg += (
+                "     waiting for moving average... "
+                f"{(BENCH_BUF_SIZE + BENCH_ITER_STARTUP - self.iter):2d}"
+            )
 
+        # Terminal info
         print(msg, end="\r")
+
+        # Time to exit? --> Print reStructuredText summary table
+        if self.iter == BENCH_ITER_EXIT:
+            COL_WIDTHS = (4, 10, 5, 5, 5, 8, 6, 6, 20)
+
+            # Header
+            print("\n")
+            msg = ""
+            for w in COL_WIDTHS:
+                msg += f"{'':=<{w}s} "
+            msg.rstrip()
+            msg += (
+                "\n"
+                f"{'py':{COL_WIDTHS[0]}s} "
+                f"{'QT_LIB':{COL_WIDTHS[1]}s} "
+                f"{'<FPS>':{COL_WIDTHS[2]}s} "
+                f"{'MIN':{COL_WIDTHS[3]}s} "
+                f"{'MAX':{COL_WIDTHS[4]}s} "
+                f"{'<RAM MB>':{COL_WIDTHS[5]}s} "
+                f"{'<CPU%>':{COL_WIDTHS[6]}s} "
+                f"{'<GPU%>':{COL_WIDTHS[7]}s} "
+                f"{'pyqtgraph':{COL_WIDTHS[8]}s} "
+                "\n"
+            )
+            for w in COL_WIDTHS:
+                msg += f"{'':-<{w}s} "
+            msg.rstrip()
+
+            # Contents
+            str_py = f"{sys.version_info.major:d}.{sys.version_info.minor:d}"
+            msg += (
+                "\n"
+                f"{str_py:<{COL_WIDTHS[0]}s} "
+                f"{QT_LIB:<{COL_WIDTHS[1]}s} "
+                f"{self.avg_fps:<{COL_WIDTHS[2]}.1f} "
+                f"{self.fps_min:<{COL_WIDTHS[3]}.1f} "
+                f"{self.fps_max:<{COL_WIDTHS[4]}.1f} "
+                f"{self.avg_cpu_mem:<{COL_WIDTHS[5]}.0f} "
+                f"{self.avg_cpu_load:<{COL_WIDTHS[6]}.1f} "
+                f"{self.avg_gpu_load:<{COL_WIDTHS[7]}.1f} "
+                f"{pg.__version__:<{COL_WIDTHS[8]}s}"
+            )
+            if PYQTGRAPH_MONKEYPATCH_APPLIED:
+                msg = msg.rstrip()
+                msg += " + monkeypatch"
+
+            # Logging
+            # pylint: disable=redefined-outer-name
+            for line in msg:
+                print(line, end="")
+            with open(BENCH_LOG_FILE, "a", encoding="UTF8") as f:
+                f.writelines(msg)
+                f.write("\n\n\n")
+            # pylint: enable=redefined-outer-name
+
+            app.exit()
+
         self.iter += 1
         return True
 
@@ -521,14 +625,15 @@ if __name__ == "__main__":
     fake_qdev.start()
 
     # BenchmarkStatsDevice:
-    #   Simulates a device that keeps track of the benchmark stats.
+    #   Simulates a device that keeps track of the benchmark stats and prints
+    #   this to the terminal.
     # QDeviceIO:
     #   Creates and manages a new thread for `benchmark_dev`. A worker will
-    #   perdiocally activate `benchmark_dev` from out of  this new thread.
+    #   perdiocally activate `benchmark_dev` from out of this new thread.
     benchmark_dev = BenchmarkStatsDevice()
     benchmark_qdev = QDeviceIO(benchmark_dev)
     benchmark_qdev.create_worker_DAQ(
-        DAQ_interval_ms=1000,
+        DAQ_interval_ms=BENCH_INTERVAL_MS,
         DAQ_function=benchmark_dev.measure_stats,
     )
     benchmark_qdev.start()
