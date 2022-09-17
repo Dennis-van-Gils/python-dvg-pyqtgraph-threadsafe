@@ -1,6 +1,12 @@
 Changelog
 =========
 
+3.2.1 (2022-09-17)
+------------------
+* Neater mechanism to support both PyQt and PySide
+* Added benchmarks
+* Improved demos
+
 3.2.0 (2022-09-13)
 ------------------
 * Added support for PyQt5, PyQt6, PySide2 and PySide6 as suggested via a pull

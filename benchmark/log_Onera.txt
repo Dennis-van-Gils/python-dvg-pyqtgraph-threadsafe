@@ -1,0 +1,180 @@
+----------------------220917_205017
+Python    | 3.6.15 (default, Dec  3 2021, 18:25:24) [MSC v.1916 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.11.0 + monkeypatch
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19041-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.6  PyQt5      50.0  50.0  50.0  151      3.5    36.1   0.11.0 + monkeypatch
+
+
+----------------------220917_205132
+Python    | 3.6.15 (default, Dec  3 2021, 18:25:24) [MSC v.1916 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.11.0 + monkeypatch
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19041-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.6  PySide2    50.0  50.0  50.1  160      3.9    35.6   0.11.0 + monkeypatch
+
+
+----------------------220917_205248
+Python    | 3.6.15 (default, Dec  3 2021, 18:25:24) [MSC v.1916 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.11.1
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19041-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.6  PyQt5      50.0  50.0  50.1  157      4.2    35.4   0.11.1              
+
+
+----------------------220917_205403
+Python    | 3.6.15 (default, Dec  3 2021, 18:25:24) [MSC v.1916 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.11.1
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19041-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.6  PySide2    50.0  50.0  50.1  163      4.2    36.1   0.11.1              
+
+
+----------------------220917_205521
+Python    | 3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.11.0 + monkeypatch
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19044-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.9  PyQt5      50.0  50.0  50.1  168      2.9    35.3   0.11.0 + monkeypatch
+
+
+----------------------220917_205636
+Python    | 3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.11.0 + monkeypatch
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19044-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.9  PySide2    50.0  50.0  50.0  179      3.4    35.4   0.11.0 + monkeypatch
+
+
+----------------------220917_205753
+Python    | 3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.11.1
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19044-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.9  PyQt5      50.0  50.0  50.1  175      3.5    35.6   0.11.1              
+
+
+----------------------220917_205908
+Python    | 3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.11.1
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19044-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.9  PySide2    50.0  50.0  50.1  183      3.4    35.0   0.11.1              
+
+
+----------------------220917_210025
+Python    | 3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.12.4
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19044-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.9  PyQt5      50.0  49.8  50.2  184      4.0    35.3   0.12.4              
+
+
+----------------------220917_210140
+Python    | 3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+PyQt6     | 6.3.1
+PyQtGraph | 0.12.4
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19044-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.9  PyQt6      50.0  50.0  50.0  185      4.4    35.6   0.12.4              
+
+
+----------------------220917_210255
+Python    | 3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.12.4
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19044-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.9  PySide2    50.0  49.0  50.0  195      4.1    35.5   0.12.4              
+
+
+----------------------220917_210409
+Python    | 3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+PySide6   | 6.3.2
+PyQtGraph | 0.12.4
+PyOpenGL  | 3.1.6
+Platform  | Windows-10-10.0.19044-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce GTX 1070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.9  PySide6    50.0  49.9  50.1  197      4.5    35.7   0.12.4              
+
+
