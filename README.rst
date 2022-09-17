@@ -10,8 +10,11 @@
 .. image:: https://img.shields.io/badge/License-MIT-purple.svg
     :target: https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/blob/master/LICENSE.txt
 
+
 DvG_PyQtGraph_ThreadSafe
 ========================
+
+
 *PyQtGraph library providing thread-safe plot curves with underlying (ring)
 buffers.*
 
@@ -24,7 +27,13 @@ Installation::
 
     pip install dvg-pyqtgraph-threadsafe
 
+Demos can be found in the `demos folder </demos>`_.
+
 .. image:: https://raw.githubusercontent.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/master/demos/demo_pyqtgraph_threadsafe.png
+
+Overview
+========
+
 
 Classes ``HistoryChartCurve``, ``BufferedPlotCurve`` & ``PlotCurve`` wrap around
 a ``pyqtgraph.PlotDataItem`` instance, called a *curve* for convenience. Data
@@ -83,6 +92,22 @@ Usage:
 
         window.show()
         sys.exit(app.exec_())
+
+
+Benchmark
+=========
+
+If you plan to use this library to plot 100.000s of points at a high frame
+rate on your integrated GPU build into your CPU, instead of on a dedicated
+(performance) GPU, you might run into performance issues. Even when OpenGL
+hardware acceleration is enabled.
+
+I recommend you to run the performance benchmark found in the
+`benchmark folder </benchmark>`_. It will test for different ``pyqtgraph``
+versions and Qt libraries. I have found that the older ``pyqtgraph 0.11``
+library has way better performance on integrated GPUs, see my
+`benchmark results </benchmark/benchmark_results.rst>`_.
+
 
 API
 ===
