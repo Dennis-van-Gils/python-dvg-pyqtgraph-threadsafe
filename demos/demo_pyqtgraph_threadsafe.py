@@ -1,28 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=invalid-name
 
 # Mechanism to support both PyQt and PySide
 # -----------------------------------------
 import os
 import sys
 
-QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
-PYSIDE2 = "PySide2"
-PYSIDE6 = "PySide6"
 PYQT5 = "PyQt5"
 PYQT6 = "PyQt6"
+PYSIDE2 = "PySide2"
+PYSIDE6 = "PySide6"
+QT_LIB_ORDER = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
+
+# Parse optional cli argument to enfore a QT_LIB
+# cli example: python benchmark.py pyside6
+if len(sys.argv) > 1:
+    arg1 = str(sys.argv[1]).upper()
+    for i, lib in enumerate(QT_LIB_ORDER):
+        if arg1 == lib.upper():
+            QT_LIB = lib
+            break
 
 # pylint: disable=import-error, no-name-in-module, c-extension-no-member
-# fmt: off
 if QT_LIB is None:
-    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
-    for lib in libOrder:
+    for lib in QT_LIB_ORDER:
         if lib in sys.modules:
             QT_LIB = lib
             break
 
 if QT_LIB is None:
-    for lib in libOrder:
+    for lib in QT_LIB_ORDER:
         try:
             __import__(lib)
             QT_LIB = lib
@@ -31,11 +40,13 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
+    this_file = __file__.split(os.sep)[-1]
     raise Exception(
-        "DvG_PyQtGraph_ThreadSafe requires PyQt5, PyQt6, PySide2 or PySide6; "
+        f"{this_file} requires PyQt5, PyQt6, PySide2 or PySide6; "
         "none of these packages could be imported."
     )
 
+# fmt: off
 if QT_LIB == PYQT5:
     from PyQt5 import QtCore, QtWidgets as QtWid           # type: ignore
     from PyQt5.QtCore import pyqtSlot as Slot              # type: ignore
@@ -48,12 +59,12 @@ elif QT_LIB == PYSIDE2:
 elif QT_LIB == PYSIDE6:
     from PySide6 import QtCore, QtWidgets as QtWid         # type: ignore
     from PySide6.QtCore import Slot                        # type: ignore
+# fmt: on
 
 QT_VERSION = (
     QtCore.QT_VERSION_STR if QT_LIB in (PYQT5, PYQT6) else QtCore.__version__
 )
 
-# fmt: on
 # pylint: enable=import-error, no-name-in-module, c-extension-no-member
 # \end[Mechanism to support both PyQt and PySide]
 # -----------------------------------------------
@@ -61,9 +72,11 @@ QT_VERSION = (
 import numpy as np
 import pyqtgraph as pg
 
-print("-" * 20)
+print("-" * 23)
+print(f"{'Python':9s} | {sys.version}")
 print(f"{QT_LIB:9s} | {QT_VERSION}")
 print(f"{'PyQtGraph':9s} | {pg.__version__}", end="")
+
 try:
     import dvg_monkeypatch_pyqtgraph  # pylint: disable=unused-import
 except ImportError:
@@ -88,7 +101,7 @@ if TRY_USING_OPENGL:
         pg.setConfigOptions(antialias=True)
         pg.setConfigOptions(enableExperimental=True)
 
-print("-" * 20)
+print("-" * 23)
 
 try:
     from dvg_qdeviceio import QDeviceIO
@@ -98,6 +111,7 @@ except ImportError:
     sys.exit(0)
 
 from dvg_pyqtgraph_threadsafe import (
+    ThreadSafeCurve,
     HistoryChartCurve,
     BufferedPlotCurve,
     LegendSelect,
@@ -368,7 +382,7 @@ class MainWindow(QtWid.QWidget):
 
     @Slot()
     def update_GUI(self):
-        self.qlbl_DAQ_rate.setText("%.1f" % qdev.obtained_DAQ_rate_Hz)
+        self.qlbl_DAQ_rate.setText("%.1f" % fake_qdev.obtained_DAQ_rate_Hz)
 
 
 # ------------------------------------------------------------------------------
@@ -377,26 +391,50 @@ class MainWindow(QtWid.QWidget):
 
 @Slot()
 def about_to_quit():
-    qdev.quit()
+    fake_qdev.quit()
     timer_chart.stop()
 
 
-def DAQ_function():
-    if window.tscurve_1.size[0] == 0:
-        x_0 = 0
-    else:
-        # Pick up the previously last phase of the sine
-        x_0 = window.tscurve_1._buffer_x[-1]  # pylint: disable=protected-access
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-    x = (1 + np.arange(WORKER_DAQ_INTERVAL_MS * Fs / 1e3)) / Fs + x_0
-    y_sin = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
-    y_cos = np.cos(2 * np.pi * 0.09 * np.unwrap(x))
 
-    window.tscurve_1.extendData(x, y_sin)
-    window.tscurve_2.extendData(x, y_cos)
-    window.tscurve_3.extendData(y_sin, y_cos)
+class FakeDevice:
+    """Simulates a data acquisition (DAQ) device that will generate data at a
+    fixed sample rate. It will push the data into the passed `ThreadSaveCurve`
+    instances.
+    """
 
-    return True
+    def __init__(
+        self,
+        tscurve_1_: ThreadSafeCurve,
+        tscurve_2_: ThreadSafeCurve,
+        tscurve_3_: ThreadSafeCurve,
+    ):
+        self.name = "FakeDevice"
+        self.is_alive = True
+        self.tscurve_1 = tscurve_1_
+        self.tscurve_2 = tscurve_2_
+        self.tscurve_3 = tscurve_3_
+
+    def generate_data(self):
+        if self.tscurve_1.size[0] == 0:
+            x_0 = 0
+        else:
+            # Pick up the previously last phase of the sine
+            # fmt: off
+            x_0 = self.tscurve_1._buffer_x[-1]  # pylint: disable=protected-access
+            # fmt: on
+
+        x = (1 + np.arange(WORKER_DAQ_INTERVAL_MS * Fs / 1e3)) / Fs + x_0
+        y_sin = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
+        y_cos = np.cos(2 * np.pi * 0.09 * np.unwrap(x))
+
+        self.tscurve_1.extendData(x, y_sin)
+        self.tscurve_2.extendData(x, y_cos)
+        self.tscurve_3.extendData(y_sin, y_cos)
+
+        return True
 
 
 # ------------------------------------------------------------------------------
@@ -409,20 +447,21 @@ if __name__ == "__main__":
 
     window = MainWindow()
 
-    # Fake a device that generates data at a sampling rate of `Fs` Hz. The
-    # data gets generated and transferred to our HistoryChartCurve-instance from
-    # out of a separate thread. This is taken care of by QDeviceIO.
-    class FakeDevice:
-        def __init__(self):
-            self.name = "FakeDevice"
-            self.is_alive = True
-
-    qdev = QDeviceIO(dev=FakeDevice())
-    qdev.create_worker_DAQ(
-        DAQ_interval_ms=WORKER_DAQ_INTERVAL_MS, DAQ_function=DAQ_function
+    # FakeDevice:
+    #   Simulates a data acquisition (DAQ) device that will generate data at a
+    #   fixed sample rate. It will push the data into the passed
+    #   `ThreadSaveCurve` instances.
+    # QDeviceIO:
+    #   Creates and manages a new thread for `fake_dev`. A worker will
+    #   perdiocally activate `fake_dev` from out of this new thread.
+    fake_dev = FakeDevice(window.tscurve_1, window.tscurve_2, window.tscurve_3)
+    fake_qdev = QDeviceIO(fake_dev)
+    fake_qdev.create_worker_DAQ(
+        DAQ_interval_ms=WORKER_DAQ_INTERVAL_MS,
+        DAQ_function=fake_dev.generate_data,
     )
-    qdev.signal_DAQ_updated.connect(window.update_GUI)
-    qdev.start()
+    fake_qdev.signal_DAQ_updated.connect(window.update_GUI)
+    fake_qdev.start()
 
     # Chart refresh timer
     timer_chart = QtCore.QTimer(timerType=QtCore.Qt.TimerType.PreciseTimer)

@@ -1,28 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=invalid-name
 
 # Mechanism to support both PyQt and PySide
 # -----------------------------------------
 import os
 import sys
 
-QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
-PYSIDE2 = "PySide2"
-PYSIDE6 = "PySide6"
 PYQT5 = "PyQt5"
 PYQT6 = "PyQt6"
+PYSIDE2 = "PySide2"
+PYSIDE6 = "PySide6"
+QT_LIB_ORDER = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
 
-# pylint: disable=import-error, no-name-in-module
-# fmt: off
+# Parse optional cli argument to enfore a QT_LIB
+# cli example: python benchmark.py pyside6
+if len(sys.argv) > 1:
+    arg1 = str(sys.argv[1]).upper()
+    for i, lib in enumerate(QT_LIB_ORDER):
+        if arg1 == lib.upper():
+            QT_LIB = lib
+            break
+
+# pylint: disable=import-error, no-name-in-module, c-extension-no-member
 if QT_LIB is None:
-    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
-    for lib in libOrder:
+    for lib in QT_LIB_ORDER:
         if lib in sys.modules:
             QT_LIB = lib
             break
 
 if QT_LIB is None:
-    for lib in libOrder:
+    for lib in QT_LIB_ORDER:
         try:
             __import__(lib)
             QT_LIB = lib
@@ -31,11 +40,13 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
+    this_file = __file__.split(os.sep)[-1]
     raise Exception(
-        "DvG_PyQtGraph_ThreadSafe requires PyQt5, PyQt6, PySide2 or PySide6; "
+        f"{this_file} requires PyQt5, PyQt6, PySide2 or PySide6; "
         "none of these packages could be imported."
     )
 
+# fmt: off
 if QT_LIB == PYQT5:
     from PyQt5 import QtWidgets as QtWid                   # type: ignore
 elif QT_LIB == PYQT6:
@@ -44,9 +55,9 @@ elif QT_LIB == PYSIDE2:
     from PySide2 import QtWidgets as QtWid                 # type: ignore
 elif QT_LIB == PYSIDE6:
     from PySide6 import QtWidgets as QtWid                 # type: ignore
-
 # fmt: on
-# pylint: enable=import-error, no-name-in-module
+
+# pylint: enable=import-error, no-name-in-module, c-extension-no-member
 # \end[Mechanism to support both PyQt and PySide]
 # -----------------------------------------------
 
@@ -114,6 +125,7 @@ class MainWindow(QtWid.QWidget):
 
 if __name__ == "__main__":
     app = QtWid.QApplication(sys.argv)
+
     window = MainWindow()
     window.show()
     if QT_LIB in (PYQT5, PYSIDE2):
