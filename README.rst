@@ -97,13 +97,13 @@ Usage:
 Benchmark
 =========
 
-If you plan to use this library to plot 100.000s of points at a high frame
-rate on your integrated GPU build into your CPU, instead of on a dedicated
-(performance) GPU, you might run into performance issues. Even when OpenGL
-hardware acceleration is enabled.
+If you intend to use this library to plot 100.000s of points at a high frame
+rate on your integrated GPU instead of on a dedicated (performance) GPU,
+you might run into performance issues. Even when OpenGL hardware
+acceleration is enabled.
 
-I recommend you to run the performance benchmark found in the
-`benchmark folder </benchmark>`_. It will test for different ``pyqtgraph``
+I recommend you run the performance benchmark found in the
+`benchmark folder </benchmark>`_. It can test for different ``pyqtgraph``
 versions and Qt libraries. I have found that the older ``pyqtgraph 0.11``
 library has way better performance than ``pyqtgraph 0.12`` on integrated
 GPUs, see my `benchmark results </benchmark/benchmark_results.rst>`_.
