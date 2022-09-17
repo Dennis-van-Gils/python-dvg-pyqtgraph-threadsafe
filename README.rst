@@ -105,8 +105,8 @@ hardware acceleration is enabled.
 I recommend you to run the performance benchmark found in the
 `benchmark folder </benchmark>`_. It will test for different ``pyqtgraph``
 versions and Qt libraries. I have found that the older ``pyqtgraph 0.11``
-library has way better performance on integrated GPUs, see my
-`benchmark results </benchmark/benchmark_results.rst>`_.
+library has way better performance than ``pyqtgraph 0.12`` on integrated
+GPUs, see my `benchmark results </benchmark/benchmark_results.rst>`_.
 
 
 API
