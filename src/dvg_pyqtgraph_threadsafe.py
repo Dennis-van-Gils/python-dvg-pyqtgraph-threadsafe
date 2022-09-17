@@ -84,31 +84,25 @@ except:  # pylint: disable=bare-except
 
 # Mechanism to support both PyQt and PySide
 # -----------------------------------------
-# This is a modified version of what happens inside the PyQtGraph library, see
-# file `pyqtgraph/Qt/__init__.py`, https://github.com/pyqtgraph/pyqtgraph/blob/59f0d6e612dc6aacd365de8244a4ebeb68016876/pyqtgraph/Qt/__init__.py
-# Below code was suggested by Mathijs van Gorcum (https://github.com/mvgorcum)
 import os
 import sys
 
-QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
-PYSIDE = "PySide"
-PYSIDE2 = "PySide2"
-PYSIDE6 = "PySide6"
-PYQT4 = "PyQt4"
 PYQT5 = "PyQt5"
 PYQT6 = "PyQt6"
+PYSIDE2 = "PySide2"
+PYSIDE6 = "PySide6"
+QT_LIB_ORDER = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
 
-# pylint: disable=import-error, no-name-in-module
-# fmt: off
+# pylint: disable=import-error, no-name-in-module, c-extension-no-member
 if QT_LIB is None:
-    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
-    for lib in libOrder:
+    for lib in QT_LIB_ORDER:
         if lib in sys.modules:
             QT_LIB = lib
             break
 
 if QT_LIB is None:
-    for lib in libOrder:
+    for lib in QT_LIB_ORDER:
         try:
             __import__(lib)
             QT_LIB = lib
@@ -117,11 +111,13 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
+    this_file = __file__.split(os.sep)[-1]
     raise Exception(
-        "DvG_PyQtGraph_ThreadSafe requires PyQt5, PyQt6, PySide2 or PySide6; "
+        f"{this_file} requires PyQt5, PyQt6, PySide2 or PySide6; "
         "none of these packages could be imported."
     )
 
+# fmt: off
 if QT_LIB == PYQT5:
     from PyQt5 import QtCore, QtGui, QtWidgets as QtWid    # type: ignore
     from PyQt5.QtCore import pyqtSlot as Slot              # type: ignore
@@ -134,9 +130,9 @@ elif QT_LIB == PYSIDE2:
 elif QT_LIB == PYSIDE6:
     from PySide6 import QtCore, QtGui, QtWidgets as QtWid  # type: ignore
     from PySide6.QtCore import Slot                        # type: ignore
-
 # fmt: on
-# pylint: enable=import-error, no-name-in-module
+
+# pylint: enable=import-error, no-name-in-module, c-extension-no-member
 # \end[Mechanism to support both PyQt and PySide]
 # -----------------------------------------------
 
