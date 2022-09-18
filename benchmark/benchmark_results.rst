@@ -1,5 +1,6 @@
 BENCHMARK
 ---------
+
 We test different versions of Python and PyQtGraph and test different Qt
 libraries. We only focus on the 2D line plot capabilities with OpenGL
 acceleration enabled.
@@ -13,23 +14,27 @@ We measure CPU & GPU load and memory consumption and check whether the max of
 50 fps is maintained for plotting.
 
 
+
 CONDITIONS
 ----------
-OpenGL acceleration is enabled for all tests, as follows::
 
-  import pyqtgraph as pg
-  import OpenGL.GL as gl
-  pg.setConfigOptions(useOpenGL=True)
-  pg.setConfigOptions(antialias=True)
-  pg.setConfigOptions(enableExperimental=True)
+* OpenGL acceleration is enabled for all tests with the following options set::
 
-Display scaling is set to 100% in the OS.
+    import pyqtgraph as pg
+    pg.setConfigOptions(useOpenGL=True)
+    pg.setConfigOptions(antialias=True)
+    pg.setConfigOptions(enableExperimental=True)
 
-======== ======= ======= ======= =======
-PyOpenGL PyQt5   PySide2 PyQt6   PySide6
--------- ------- ------- ------- -------
-3.1.6    5.15.2  5.15.2  6.3.1   6.3.2
-======== ======= ======= ======= =======
+* Versions
+
+  ======== ======= ======= ======= =======
+  PyOpenGL PyQt5   PySide2 PyQt6   PySide6
+  -------- ------- ------- ------- -------
+  3.1.6    5.15.2  5.15.2  6.3.1   6.3.2
+  ======== ======= ======= ======= =======
+
+* Display scaling is set to 100% in the OS.
+
 
 
 RESULTS: Desktop *Onera*
@@ -72,6 +77,8 @@ py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph
 3.9  PyQt6      50.0  50.0  50.0  185      4.4    35.6   0.12.4
 3.9  PySide6    50.0  49.9  50.1  197      4.5    35.7   0.12.4
 ==== ========== ===== ===== ===== ======== ====== ====== ====================
+
+
 
 CONCLUSION
 ----------
