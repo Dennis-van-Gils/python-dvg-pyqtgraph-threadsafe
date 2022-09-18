@@ -10,7 +10,7 @@ pip install pyqt5 pyside2
 pip install -r requirements.txt
 
 REM Python 3.9
-call conda create -c conda-forge -name %NAME_ENV_PY39% python=3.9
+call conda create -c conda-forge -n %NAME_ENV_PY39% python=3.9
 call conda activate %NAME_ENV_PY39%
 pip install ipython black pylint
 pip install pyqt5 pyqt6 pyside2 pyside6
