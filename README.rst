@@ -103,10 +103,11 @@ you might run into performance issues. Even when OpenGL hardware
 acceleration is enabled.
 
 I recommend you run the performance benchmark found in the
-`benchmark folder </benchmark>`_. It can test for different ``pyqtgraph``
-versions and Qt libraries. I have found that the older ``pyqtgraph 0.11``
-library has way better performance than ``pyqtgraph 0.12`` on integrated
-GPUs, see my `benchmark results </benchmark/benchmark_results.rst>`_.
+`benchmark folder <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/tree/master/benchmark>`_.
+It can test for different PyQtGraph versions and Qt libraries on your
+GPU of choice. I have found that the older ``pyqtgraph 0.11`` library sometimes
+results in a better performance than ``pyqtgraph 0.12`` on integrated GPUs.
+See `benchmark results <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/blob/master/benchmark/benchmark_results.rst>`_.
 
 
 API
