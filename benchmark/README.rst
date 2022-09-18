@@ -24,7 +24,7 @@ Graphics card preference
 ========================
 
 When your system has both an integrated GPU and a dedicated one, please make
-sure to tell the OS to favor the correct GPU.
+sure to tell the OS to favour the correct GPU.
 
 In Windows you must go to the 'Graphics settings' configuration page, add an
 entry for ``python.exe`` for each of the conda environments *py36bench* and
