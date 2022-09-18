@@ -15,24 +15,7 @@ We measure CPU & GPU load and memory consumption and check whether the max of
 
 CONDITIONS
 ----------
-Display scaling set to 100%
-
-=========== ==================================
-Platform    Windows-10-10.0.19041-SP0
-CPU         AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
-GPU         NVIDIA GeForce GTX 1070
-Python      3.6.15 (default, Dec  3 2021, 18:25:24) [MSC v.1916 64 bit (AMD64)]
-Python:     3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
-PyOpenGL    3.1.6
-PyQt5       5.15.2
-PySide2     5.15.2
-PyQt6       6.3.1
-PySide6     6.3.2
-=========== ==================================
-
-OPENGL SETTINGS
----------------
-::
+OpenGL acceleration is enabled for all tests, as follows::
 
   import pyqtgraph as pg
   import OpenGL.GL as gl
@@ -40,9 +23,25 @@ OPENGL SETTINGS
   pg.setConfigOptions(antialias=True)
   pg.setConfigOptions(enableExperimental=True)
 
+Display scaling is set to 100% in the OS.
 
-RESULTS
--------
+======== ======= ======= ======= =======
+PyOpenGL PyQt5   PySide2 PyQt6   PySide6
+-------- ------- ------- ------- -------
+3.1.6    5.15.2  5.15.2  6.3.1   6.3.2
+======== ======= ======= ======= =======
+
+
+RESULTS: Desktop *Onera*
+------------------------
+
+=========== ==================================
+GPU         NVIDIA GeForce GTX 1070
+CPU         AMD64 Family 23 Model 113 Stepping 0 (AMD Ryzen 5 3600)
+Platform    Windows-10-10.0.19041-SP0
+Python      3.6.15 (default, Dec  3 2021, 18:25:24) [MSC v.1916 64 bit (AMD64)]
+Python      3.9.13 | packaged by conda-forge | (main, May 27 2022, 16:51:29) [MSC v.1929 64 bit (AMD64)]
+=========== ==================================
 
 ==== ========== ===== ===== ===== ======== ====== ====== ====================
 py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph
@@ -77,17 +76,15 @@ py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph
 CONCLUSION
 ----------
 
-The PyQtGraph version seems to have an impact on drawing performance. While
-not apparent for this tested system, it will have a major impact on laptop
-GPUs (tested but not yet turned into a table and shown here).
-The older ``v0.11`` seems superior in speed and memory, but can only support
-*PyQt5* and *PySide2*, not *PyQt6* and *PySide6*. Whereas ``v0.12.4`` does
-support *PyQt6* and *PySide6* but can't seem to match the performance of
-``v0.11``. This might be because of the overhead that the Qt6 libraries
-have to correctly handle the display scaling of the OS, something that is
-not fully present in Qt5.
+The PyQtGraph version can have an impact on drawing performance, though in the
+system tested here it is not that apparent. Some integrated GPUs benefit from
+using the older ``v0.11`` as it can reduce memory consumption and lead to
+a higher sustained frame rate (tested but not yet turned into a table and shown
+here). The older ``v0.11`` can only support *PyQt5* and *PySide2*, whereas
+``v0.12.4`` also supports *PyQt6* and *PySide6* which offer better display
+scaling support.
 
 | **Dennis van Gils**
-| **17-09-2022**
+| **18-09-2022**
 |
 | P.S. The ``v0.11.0`` monkeypatch and details can be found here https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-monkeypatch
