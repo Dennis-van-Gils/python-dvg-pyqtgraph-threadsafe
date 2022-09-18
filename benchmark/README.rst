@@ -20,6 +20,12 @@ Python environments for benchmarking, see `<create_conda_envs.bat>`_.
 With this set up, you can run the full benchmark matrix found in
 `<automate_benchmarks.bat>`_.
 
+GPU load
+========
+
+If you have an NVidia GPU then the benchmark will report the system-wide
+GPU load. Any other card will result in a reading of 0%. 
+
 Graphics card preference
 ========================
 
