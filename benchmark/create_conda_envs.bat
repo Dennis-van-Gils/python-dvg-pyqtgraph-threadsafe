@@ -21,6 +21,8 @@ GOTO End
 
 REM --------------------
 REM Alternative channels
+REM Might help when any of the Qt libraries fail to install with the method above
+REM Might result in lower Qt minor-versions to get installed
 REM --------------------
 
 REM Python 3.6
