@@ -4,6 +4,8 @@ Changelog
 3.2.2 (2022-09-18)
 ------------------
 * Updated discussion on benchmarks
+* The batch file for auto-creation of the conda environments found in the
+  benchmark folder now uses the conda-forge channel.
 
 3.2.1 (2022-09-17)
 ------------------
