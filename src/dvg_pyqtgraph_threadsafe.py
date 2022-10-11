@@ -71,8 +71,8 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "13-09-2022"
-__version__ = "3.2.0"
+__date__ = "11-10-2022"
+__version__ = "3.2.3"
 
 from functools import partial
 from typing import Union, Tuple, List, Optional
@@ -754,11 +754,12 @@ class PlotManager(QtCore.QObject):
             self.parent(),
             "Clear plots",
             str_msg,
-            QtWid.QMessageBox.Yes | QtWid.QMessageBox.No,
-            QtWid.QMessageBox.No,
+            QtWid.QMessageBox.StandardButton.Yes
+            | QtWid.QMessageBox.StandardButton.No,
+            QtWid.QMessageBox.StandardButton.No,
         )
 
-        if reply == QtWid.QMessageBox.Yes:
+        if reply == QtWid.QMessageBox.StandardButton.Yes:
             if self._clear_linked_curves is not None:
                 for curve in self._clear_linked_curves:
                     curve.clear()

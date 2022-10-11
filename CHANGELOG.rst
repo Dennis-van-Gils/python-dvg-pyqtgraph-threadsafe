@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.2.3 (2022-10-11)
+------------------
+* Fixed bug in PyQt6: `QMessageBox.Yes` --> `QMessageBox.StandardButton.Yes`
+
 3.2.2 (2022-09-18)
 ------------------
 * Updated discussion on benchmarks
