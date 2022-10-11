@@ -307,21 +307,6 @@ class MainWindow(QtWid.QWidget):
     # --------------------------------------------------------------------------
 
     @Slot()
-    def process_qpbt_clear_chart(self):
-        str_msg = "Are you sure you want to clear the chart?"
-        reply = QtWid.QMessageBox.warning(
-            window,
-            "Clear chart",
-            str_msg,
-            QtWid.QMessageBox.Yes | QtWid.QMessageBox.No,
-            QtWid.QMessageBox.No,
-        )
-
-        if reply == QtWid.QMessageBox.Yes:
-            for tscurve in self.tscurves:
-                tscurve.clear()
-
-    @Slot()
     def process_qpbt_pause_chart(self):
         if self.paused:
             self.qpbt_pause_chart.setText("Pause")
@@ -348,11 +333,12 @@ class MainWindow(QtWid.QWidget):
         for tscurve in self.tscurves:
             tscurve.update()
 
-        if len(self.tscurve_3.curve.xData) > 0:
-            self.lissajous_marker.setData(
-                [self.tscurve_3.curve.xData[-1]],
-                [self.tscurve_3.curve.yData[-1]],
-            )
+        if self.tscurve_3.curve.xData is not None:
+            if len(self.tscurve_3.curve.xData) > 0:
+                self.lissajous_marker.setData(
+                    [self.tscurve_3.curve.xData[-1]],
+                    [self.tscurve_3.curve.yData[-1]],
+                )
 
     @Slot()
     def update_charts(self):
