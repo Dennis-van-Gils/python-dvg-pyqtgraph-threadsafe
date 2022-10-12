@@ -10,6 +10,7 @@ Changelog
 * Fix for external bug in `paintGL` of `pyqtgraph\graphicsItems\PlotCurveItem.py`:
   Added explicit check to ensure that the curve is only drawn when it has more
   than 1 point.
+* Added benchmark running `python=3.10` and `pyqtgraph==0.13.1`
 
 3.2.3 (2022-10-11)
 ------------------
