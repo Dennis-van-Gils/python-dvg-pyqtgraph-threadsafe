@@ -27,9 +27,8 @@ Installation::
 
     pip install dvg-pyqtgraph-threadsafe
 
-Demos can be found in the `demos folder </demos>`_.
-Benchmark tests and results can be found in the
-`benchmark folder </benchmark>`_.
+Demos can be found in the `demos folder </demos>`__.
+Benchmark tests and results can be found in the `benchmark folder </benchmark>`__.
 
 .. image:: https://raw.githubusercontent.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/master/demos/demo_pyqtgraph_threadsafe.png
 
