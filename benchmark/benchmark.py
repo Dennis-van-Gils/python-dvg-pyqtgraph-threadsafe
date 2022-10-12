@@ -373,11 +373,12 @@ class MainWindow(QtWid.QWidget):
         for tscurve in self.tscurves:
             tscurve.update()
 
-        if len(self.tscurve_3.curve.xData) > 0:
-            self.lissajous_marker.setData(
-                [self.tscurve_3.curve.xData[-1]],
-                [self.tscurve_3.curve.yData[-1]],
-            )
+        if self.tscurve_3.curve.xData is not None:
+            if len(self.tscurve_3.curve.xData) > 0:
+                self.lissajous_marker.setData(
+                    [self.tscurve_3.curve.xData[-1]],
+                    [self.tscurve_3.curve.yData[-1]],
+                )
 
     @Slot()
     def update_charts(self):
