@@ -71,8 +71,8 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "11-10-2022"
-__version__ = "3.2.3"
+__date__ = "12-10-2022"
+__version__ = "3.2.4"
 
 from functools import partial
 from typing import Union, Tuple, List, Optional
@@ -265,8 +265,18 @@ class ThreadSafeCurve(object):
         # Create a snapshot of the currently buffered data. Fast operation.
         if create_snapshot:
             locker = QtCore.QMutexLocker(self._mutex)
-            self._snapshot_x = np.copy(self._buffer_x)
-            self._snapshot_y = np.copy(self._buffer_y)
+            if self._use_ringbuffer:
+                # `_buffer_x` is of type RingBuffer.
+                # We can use `asarray()` to transform and copy the buffer into
+                # an ndarray. Note that calling `asarray()` on an object already
+                # of similar type ndarray will /not/ create a copy, but a
+                # pass-by-ref instead.
+                self._snapshot_x = np.asarray(self._buffer_x)
+                self._snapshot_y = np.asarray(self._buffer_y)
+            else:
+                # `_buffer_x` is of type ndarray so we need `copy()`
+                self._snapshot_x = np.copy(self._buffer_x)
+                self._snapshot_y = np.copy(self._buffer_y)
             # print("numel x: %d, numel y: %d" %
             #      (self._snapshot_x.size, self._snapshot_y.size))
             locker.unlock()
@@ -321,7 +331,21 @@ class ThreadSafeCurve(object):
             y_finite = y[finite]
             # connect = connect[finite]
 
-            self.curve.setData(x_finite, y_finite)  # , connect=connect)
+            if len(x_finite) > 1:
+                # An exception can occur in:
+                #   pyqtgraph\graphicsItems\PlotCurveItem.py, in paintGL
+                #   gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.shape[0])
+                #   OpenGL.error.GLError: GLError(
+                #       err = 1280,
+                #       description = b'invalid enumerant',
+                #       baseOperation = glDrawArrays,
+                #       cArguments = (GL_LINE_STRIP, 0, 2)
+                #   )
+                # when the number of points is just 1. Not enough to draw a
+                # line, obviously. This is not caught by pyqtgraph.
+                self.curve.setData(x_finite, y_finite)  # , connect=connect)
+            else:
+                self.curve.setData([], [])
 
     @Slot()
     def clear(self):

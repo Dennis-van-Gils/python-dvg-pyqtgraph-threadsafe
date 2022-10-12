@@ -1,9 +1,19 @@
 Changelog
 =========
 
+3.2.4 (2022-10-12)
+------------------
+* Bug fix: Snapshot creation checks if internal buffer is of type RingBuffer and
+  casts to numpy.ndarray. This resolves an intermittent error where the
+  `isfinite` boolean return array was operating as mask on the RingBuffer, which
+  fails. The boolean return array now always operates on numpy.ndarray.
+* Fix for external bug in `paintGL` of `pyqtgraph\graphicsItems\PlotCurveItem.py`:
+  Added explicit check to ensure that the curve is only drawn when it has more
+  than 1 point.
+
 3.2.3 (2022-10-11)
 ------------------
-* Fixed bug in PyQt6: `QMessageBox.Yes` --> `QMessageBox.StandardButton.Yes`
+* Fixed bug when using PyQt6: `QMessageBox.Yes` --> `QMessageBox.StandardButton.Yes`
 
 3.2.2 (2022-09-18)
 ------------------
