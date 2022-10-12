@@ -77,7 +77,7 @@ if TRY_USING_OPENGL:
         pg.setConfigOptions(antialias=True)
         pg.setConfigOptions(enableExperimental=True)
 
-from dvg_pyqtgraph_threadsafe import PlotCurve
+from dvg_pyqtgraph_threadsafe import BufferedPlotCurve
 
 # ------------------------------------------------------------------------------
 #   MainWindow
@@ -96,22 +96,16 @@ class MainWindow(QtWid.QWidget):
 
         self.plot_1 = self.gw.addPlot()
         self.plot_1.showGrid(x=1, y=1)
-        self.plot_1.setRange(
-            xRange=[0, 5],
-            yRange=[0, 4],
-            disableAutoRange=True,
-        )
 
-        self.tscurve = PlotCurve(
+        self.tscurve = BufferedPlotCurve(
+            capacity=8,
             linked_curve=self.plot_1.plot(
                 pen=pg.mkPen(color=[255, 255, 0], width=3)
             ),
         )
 
-        x = np.array([0, 1, 2, 3, 4])
-        y = np.array([0, 1, np.nan, 3, 3])
-
-        self.tscurve.setData(x, y)
+        self.tscurve.extendData([0, 1, 2, 3, 4], [0, 1, np.nan, 3, 3])
+        self.tscurve.extendData([5, 6, 7, 8, 9], [4, 5, np.nan, 7, np.nan])
         self.tscurve.update()
 
         # Round up full window
