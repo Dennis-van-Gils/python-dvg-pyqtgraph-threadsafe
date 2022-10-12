@@ -1,3 +1,7 @@
+Benchmark results
+=================
+See `<benchmark_results.rst>`_.
+
 Running the benchmark
 =====================
 
