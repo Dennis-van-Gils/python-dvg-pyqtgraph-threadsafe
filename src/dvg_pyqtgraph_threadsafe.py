@@ -71,8 +71,8 @@ Usage:
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
-__date__ = "12-10-2022"
-__version__ = "3.2.4"
+__date__ = "13-10-2022"
+__version__ = "3.2.5"
 
 from functools import partial
 from typing import Union, Tuple, List, Optional
@@ -287,12 +287,12 @@ class ThreadSafeCurve(object):
         # returns almost immediately, but the curve still has to get redrawn by
         # the Qt event engine, which will happen automatically, eventually.
         if len(self._snapshot_x) == 0:
-            self.curve.setData([], [])
+            self.curve.setData(x=[], y=[])
         else:
             x_0 = self._snapshot_x[-1] if self._shift_right_x_to_zero else 0
             x = (self._snapshot_x - x_0) / float(self.x_axis_divisor)
             y = self._snapshot_y / float(self.y_axis_divisor)
-            # self.curve.setData(x,y)  # No! Read below.
+            # self.curve.setData(x=x, y=y)  # No! Read below.
 
             # PyQt5 >= 5.12.3 causes a bug in PyQtGraph where a curve won't
             # render if it contains NaNs (but only in the case when OpenGL is
@@ -343,9 +343,15 @@ class ThreadSafeCurve(object):
                 #   )
                 # when the number of points is just 1. Not enough to draw a
                 # line, obviously. This is not caught by pyqtgraph.
-                self.curve.setData(x_finite, y_finite)  # , connect=connect)
+                self.curve.setData(
+                    x=x_finite,
+                    y=y_finite,
+                    skipFiniteCheck=True,  # Do: We already checked
+                    # connect=connect, # Don't: Leads to issues, see above
+                    connect="all",  # Instead do this
+                )
             else:
-                self.curve.setData([], [])
+                self.curve.setData(x=[], y=[])
 
     @Slot()
     def clear(self):

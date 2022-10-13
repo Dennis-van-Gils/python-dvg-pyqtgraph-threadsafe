@@ -1,6 +1,11 @@
 Changelog
 =========
 
+3.2.5 (2022-10-13)
+------------------
+* Minor edit: Using explicit arguments `x` and `y` to set the curve data and set
+  the flag `skipFiniteCheck=True`. Both save (marginal) CPU time.
+
 3.2.4 (2022-10-12)
 ------------------
 * Bug fix: Snapshot creation checks if internal buffer is of type RingBuffer and
