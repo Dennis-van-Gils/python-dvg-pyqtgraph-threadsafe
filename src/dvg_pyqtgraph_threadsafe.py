@@ -72,7 +72,7 @@ __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
 __url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
 __date__ = "13-10-2022"
-__version__ = "3.2.5"
+__version__ = "3.2.6"
 
 from functools import partial
 from typing import Union, Tuple, List, Optional

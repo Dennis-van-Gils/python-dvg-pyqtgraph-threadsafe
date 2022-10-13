@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.2.6 (2022-10-13)
+------------------
+* Added link to notes on use-case: DAQ
+
 3.2.5 (2022-10-13)
 ------------------
 * Minor edit: Using explicit arguments `x` and `y` to set the curve data and set
