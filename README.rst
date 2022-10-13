@@ -27,8 +27,12 @@ Installation::
 
     pip install dvg-pyqtgraph-threadsafe
 
-Demos can be found in the `demos folder <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/tree/master/demos>`__.
-Benchmark tests and results can be found in the `benchmark folder <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/tree/master/benchmark>`__.
+Useful links
+------------
+
+* Demos can be found in the `demos folder <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/tree/master/demos>`__.
+* Benchmark tests and results can be found in the `benchmark folder <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/tree/master/benchmark>`__.
+* Important notes on the specific use-case where another thread is actively requesting data at a high rate from an external device (e.g. an Arduino) to be pushed into a ThreadSafeCurve can be found `here <https://github.com/Dennis-van-Gils/DvG_Arduino_PyQt_multithread_demo/blob/master/README.rst#pyqtgraph--opengl-performance>`__. 
 
 .. image:: https://raw.githubusercontent.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/master/demos/demo_pyqtgraph_threadsafe.png
 
