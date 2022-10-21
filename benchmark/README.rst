@@ -38,7 +38,7 @@ sure to tell the OS to favour the correct GPU.
 
 In Windows you must go to the 'Graphics settings' configuration page, add an
 entry for ``python.exe`` for each of the conda environments *py36bench* and
-*py39bench*, usually located at ``%USERPROFILE%\anaconda3\envs``. Then click on
+*py310bench*, usually located at ``%USERPROFILE%\anaconda3\envs``. Then click on
 the new ``python.exe`` entry in the list and select the correct GPU.
 
 Desktop scaling
