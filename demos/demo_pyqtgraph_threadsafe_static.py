@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=invalid-name
 
-# Mechanism to support both PyQt and PySide
-# -----------------------------------------
 import os
 import sys
+
+# Mechanism to support both PyQt and PySide
+# -----------------------------------------
 
 PYQT5 = "PyQt5"
 PYQT6 = "PyQt6"
@@ -23,7 +24,6 @@ if len(sys.argv) > 1:
             QT_LIB = lib
             break
 
-# pylint: disable=import-error, no-name-in-module, c-extension-no-member
 if QT_LIB is None:
     for lib in QT_LIB_ORDER:
         if lib in sys.modules:
@@ -47,6 +47,7 @@ if QT_LIB is None:
     )
 
 # fmt: off
+# pylint: disable=import-error, no-name-in-module
 if QT_LIB == PYQT5:
     from PyQt5 import QtWidgets as QtWid                   # type: ignore
 elif QT_LIB == PYQT6:
@@ -55,9 +56,9 @@ elif QT_LIB == PYSIDE2:
     from PySide2 import QtWidgets as QtWid                 # type: ignore
 elif QT_LIB == PYSIDE6:
     from PySide6 import QtWidgets as QtWid                 # type: ignore
+# pylint: enable=import-error, no-name-in-module
 # fmt: on
 
-# pylint: enable=import-error, no-name-in-module, c-extension-no-member
 # \end[Mechanism to support both PyQt and PySide]
 # -----------------------------------------------
 
