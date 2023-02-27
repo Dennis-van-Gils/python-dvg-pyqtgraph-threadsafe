@@ -2,9 +2,6 @@
     :target: https://pypi.org/project/dvg-pyqtgraph-threadsafe
 .. image:: https://img.shields.io/pypi/pyversions/dvg-pyqtgraph-threadsafe
     :target: https://pypi.org/project/dvg-pyqtgraph-threadsafe
-.. image:: https://requires.io/github/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/requirements.svg?branch=master
-    :target: https://requires.io/github/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/requirements/?branch=master
-    :alt: Requirements Status
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
 .. image:: https://img.shields.io/badge/License-MIT-purple.svg
@@ -32,7 +29,7 @@ Useful links
 
 * Demos can be found in the `demos folder <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/tree/master/demos>`__.
 * Benchmark tests and results can be found in the `benchmark folder <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/tree/master/benchmark>`__.
-* Important notes on the specific use-case where another thread is actively requesting data at a high rate from an external device (e.g. an Arduino) to be pushed into a ThreadSafeCurve can be found `here <https://github.com/Dennis-van-Gils/DvG_Arduino_PyQt_multithread_demo/blob/master/README.rst#pyqtgraph--opengl-performance>`__. 
+* Important notes on the specific use-case where another thread is actively requesting data at a high rate from an external device (e.g. an Arduino) to be pushed into a ThreadSafeCurve can be found `here <https://github.com/Dennis-van-Gils/DvG_Arduino_PyQt_multithread_demo/blob/master/README.rst#pyqtgraph--opengl-performance>`__.
 
 .. image:: https://raw.githubusercontent.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe/master/demos/demo_pyqtgraph_threadsafe.png
 
