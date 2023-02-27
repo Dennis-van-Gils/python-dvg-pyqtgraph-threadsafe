@@ -4,4 +4,4 @@ pyopengl
 
 dvg-pyqtgraph-monkeypatch~=2.0  # Only in use when pyqtgraph==0.11.0
 dvg-pyqtgraph-threadsafe
-dvg-qdeviceio~=1.1
+dvg-qdeviceio~=1.2
