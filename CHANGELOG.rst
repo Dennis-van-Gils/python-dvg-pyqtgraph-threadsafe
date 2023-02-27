@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.3.0 (2023-02-27)
+------------------
+* Raise `ImportError` instead of general `Exception`
+
 3.2.6 (2022-10-13)
 ------------------
 * Added link to notes on use-case: DAQ
