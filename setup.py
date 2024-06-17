@@ -76,7 +76,7 @@ setup(
     python_requires=">=3.6",
     install_requires=[
         "typing_extensions",
-        "numpy~=1.15",
+        "numpy>=1.15,<3.0",
         "pyqtgraph~=0.11",
         "dvg-ringbuffer~=1.0",
     ],
