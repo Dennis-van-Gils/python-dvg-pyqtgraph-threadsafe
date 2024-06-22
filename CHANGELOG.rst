@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.4.0 (2024-06-22)
+------------------
+* Support for Numpy 2.0
+
 3.3.0 (2023-02-27)
 ------------------
 * Raise `ImportError` instead of general `Exception`
