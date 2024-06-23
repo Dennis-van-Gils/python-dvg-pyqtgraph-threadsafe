@@ -75,6 +75,7 @@ setup(
         "numpy>=1.15,<3.0",
         "pyqtgraph~=0.11",
         "dvg-ringbuffer~=1.1",
+        "qtpy",
     ],
     extras_require={},
 )
