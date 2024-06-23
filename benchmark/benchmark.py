@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# pylint: disable=invalid-name
-
+"""Benchmark to test the ``pyqtgraph`` and ``dvg_pyqtgraph_threadsafe``
+performance. You can experiment with different Python and PyQt versions, and
+with enabling or disabling OpenGL hardware acceleration."""
+__author__ = "Dennis van Gils"
+__authoremail__ = "vangils.dennis@gmail.com"
+__url__ = "https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-threadsafe"
+# pylint: disable=wrong-import-position, missing-function-docstring
 import os
 import sys
 import platform
+from typing import List
 
 # Constants
-Fs = 10000  # Sampling rate of the simulated data [Hz]
-WORKER_DAQ_INTERVAL_MS = 10  # [ms]
-CHART_DRAW_INTERVAL_MS = 20  # [ms]
-CHART_HISTORY_TIME = 10  # 10 [s]
+Fs = 10000
+"""Sampling rate of the simulated data [Hz]"""
+WORKER_DAQ_INTERVAL_MS = 10
+"""Generate chunks of simulated data at this interval [ms]"""
+CHART_DRAW_INTERVAL_MS = 20
+"""Redraw the charts at this update interval [ms]"""
+CHART_HISTORY_TIME = 10
+"""History length of the charts [s]"""
 
 # Benchmark constants
 BENCH_INTERVAL_MS = 1000  # [ms]
@@ -54,7 +64,7 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
-    this_file = __file__.split(os.sep)[-1]
+    this_file = __file__.rsplit(os.sep, maxsplit=1)[-1]
     raise ImportError(
         f"{this_file} requires PyQt5, PyQt6, PySide2 or PySide6; "
         "none of these packages could be imported."
@@ -65,15 +75,19 @@ if QT_LIB is None:
 if QT_LIB == PYQT5:
     from PyQt5 import QtCore, QtWidgets as QtWid           # type: ignore
     from PyQt5.QtCore import pyqtSlot as Slot              # type: ignore
+    from PyQt5.QtCore import pyqtSignal as Signal          # type: ignore
 elif QT_LIB == PYQT6:
     from PyQt6 import QtCore, QtWidgets as QtWid           # type: ignore
     from PyQt6.QtCore import pyqtSlot as Slot              # type: ignore
+    from PyQt6.QtCore import pyqtSignal as Signal          # type: ignore
 elif QT_LIB == PYSIDE2:
     from PySide2 import QtCore, QtWidgets as QtWid         # type: ignore
     from PySide2.QtCore import Slot                        # type: ignore
+    from PySide2.QtCore import Signal                      # type: ignore
 elif QT_LIB == PYSIDE6:
     from PySide6 import QtCore, QtWidgets as QtWid         # type: ignore
     from PySide6.QtCore import Slot                        # type: ignore
+    from PySide6.QtCore import Signal                      # type: ignore
 # pylint: enable=import-error, no-name-in-module
 # fmt: on
 
@@ -137,7 +151,7 @@ for line in log_msg:
 with open(BENCH_LOG_FILE, "a", encoding="UTF8") as f:
     f.writelines(log_msg)
 
-from dvg_qdeviceio import QDeviceIO
+from dvg_qdeviceio import QDeviceIO, DAQ_TRIGGER
 from dvg_pyqtgraph_threadsafe import (
     ThreadSafeCurve,
     HistoryChartCurve,
@@ -162,11 +176,14 @@ os_process.cpu_percent(interval=None)  # Prime the measurement
 
 
 class MainWindow(QtWid.QWidget):
-    def __init__(self, parent=None, **kwargs):
+    def __init__(self, qdev: QDeviceIO, parent=None, **kwargs):
         super().__init__(parent, **kwargs)
 
-        self.setGeometry(350, 50, 1200, 660)
+        self.qdev = qdev
+        self.qdev.signal_DAQ_updated.connect(self.update_GUI)
+
         self.setWindowTitle(f"Benchmark: {QT_LIB}, PyQtGraph {pg.__version__}")
+        self.setGeometry(350, 50, 1200, 660)
 
         # Keep track of the obtained chart refresh rate
         self.obtained_chart_rate_Hz = np.nan
@@ -180,7 +197,7 @@ class MainWindow(QtWid.QWidget):
         self.gw = pg.GraphicsLayoutWidget()
 
         p = {"color": "#EEE", "font-size": "12pt"}
-        self.plot_1 = self.gw.addPlot()
+        self.plot_1: pg.PlotItem = self.gw.addPlot()
         self.plot_1.setClipToView(True)
         self.plot_1.showGrid(x=1, y=1)
         self.plot_1.setTitle("HistoryChartCurve")
@@ -192,8 +209,10 @@ class MainWindow(QtWid.QWidget):
             disableAutoRange=True,
         )
 
-        self.plot_2 = self.gw.addPlot()
-        # self.plot_2.setClipToView(True)  # Note: Do not enable clip for a Lissajous. Clip only works well on uniformly monotic x-data.
+        self.plot_2: pg.PlotItem = self.gw.addPlot()
+        # Note: Do not enable clip for a Lissajous. Clip only works well on
+        # uniformly monotic x-data.
+        # self.plot_2.setClipToView(True)  # Commented out
         self.plot_2.showGrid(x=1, y=1)
         self.plot_2.setTitle("BufferedPlotCurve: Lissajous")
         self.plot_2.setLabel("bottom", text="x", **p)
@@ -224,11 +243,12 @@ class MainWindow(QtWid.QWidget):
             ),
         )
 
-        self.tscurves = [
+        self.tscurves: List[ThreadSafeCurve] = [
             self.tscurve_1,
             self.tscurve_2,
             self.tscurve_3,
         ]
+        """List containing all used ThreadSafeCurves instances."""
 
         # Extra marker to indicate tracking position of Lissajous curve
         self.lissajous_marker = self.plot_2.plot(
@@ -239,7 +259,7 @@ class MainWindow(QtWid.QWidget):
             symbolSize=16,
         )
 
-        # 'Obtained rates'
+        # Obtained rates
         self.qlbl_DAQ_rate = QtWid.QLabel("")
         self.qlbl_DAQ_rate.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         self.qlbl_DAQ_rate.setMinimumWidth(50)
@@ -262,7 +282,7 @@ class MainWindow(QtWid.QWidget):
         grid_rates.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         # fmt: on
 
-        # 'Legend'
+        # Legend
         legend = LegendSelect(linked_curves=self.tscurves)
         qgrp_legend = QtWid.QGroupBox("LegendSelect")
         qgrp_legend.setLayout(legend.grid)
@@ -271,9 +291,14 @@ class MainWindow(QtWid.QWidget):
         for chkb in legend.chkbs:
             chkb.clicked.connect(self.update_num_points_drawn)
 
-        # `PlotManager`
-        self.qpbt_pause_chart = QtWid.QPushButton("Pause", checkable=True)
-        self.qpbt_pause_chart.clicked.connect(self.process_qpbt_pause_chart)
+        # Plot manager
+        self.qpbt_pause_chart = QtWid.QPushButton("Pause")
+        self.qpbt_pause_chart.setCheckable(True)
+        # pylint: disable=unnecessary-lambda
+        self.qpbt_pause_chart.clicked.connect(
+            lambda checked: self.process_qpbt_pause_chart(checked)
+        )
+        # pylint: enable=unnecessary-lambda
 
         self.plot_manager = PlotManager(parent=self)
         self.plot_manager.grid.addWidget(self.qpbt_pause_chart, 0, 0, 1, 2)
@@ -334,29 +359,10 @@ class MainWindow(QtWid.QWidget):
     #   Handle controls
     # --------------------------------------------------------------------------
 
-    @Slot()
-    def process_qpbt_clear_chart(self):
-        str_msg = "Are you sure you want to clear the chart?"
-        reply = QtWid.QMessageBox.warning(
-            window,
-            "Clear chart",
-            str_msg,
-            QtWid.QMessageBox.Yes | QtWid.QMessageBox.No,
-            QtWid.QMessageBox.No,
-        )
-
-        if reply == QtWid.QMessageBox.Yes:
-            for tscurve in self.tscurves:
-                tscurve.clear()
-
-    @Slot()
-    def process_qpbt_pause_chart(self):
-        if self.paused:
-            self.qpbt_pause_chart.setText("Pause")
-            self.paused = False
-        else:
-            self.qpbt_pause_chart.setText("Paused")
-            self.paused = True
+    @Slot(bool)
+    def process_qpbt_pause_chart(self, checked: bool):
+        self.paused = checked
+        self.qpbt_pause_chart.setText("Paused" if checked else "Pause")
 
     def update_num_points_drawn(self):
         # Keep track of the number of drawn points
@@ -369,14 +375,17 @@ class MainWindow(QtWid.QWidget):
                     else len(tscurve.curve.xData)
                 )
 
-        self.qlbl_num_points.setText("%s" % f"{(num_points):,}")
+        self.qlbl_num_points.setText(f"{(num_points):,}")
 
     @Slot()
     def update_curves(self):
         for tscurve in self.tscurves:
             tscurve.update()
 
-        if self.tscurve_3.curve.xData is not None:
+        if (
+            self.tscurve_3.curve.xData is not None
+            and self.tscurve_3.curve.yData is not None
+        ):
             if len(self.tscurve_3.curve.xData) > 0:
                 self.lissajous_marker.setData(
                     [self.tscurve_3.curve.xData[-1]],
@@ -405,82 +414,63 @@ class MainWindow(QtWid.QWidget):
 
         # Update curves
         if not self.paused:
-            self.qlbl_chart_rate.setText("%.1f" % self.obtained_chart_rate_Hz)
+            self.qlbl_chart_rate.setText(f"{self.obtained_chart_rate_Hz:.1f}")
             self.update_num_points_drawn()
             self.update_curves()
 
     @Slot()
     def update_GUI(self):
-        self.qlbl_DAQ_rate.setText("%.1f" % fake_qdev.obtained_DAQ_rate_Hz)
+        self.qlbl_DAQ_rate.setText(f"{self.qdev.obtained_DAQ_rate_Hz:.1f}")
 
 
 # ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-
-
-@Slot()
-def about_to_quit():
-    print("\n")
-    app.processEvents()
-    benchmark_qdev.quit()
-    fake_qdev.quit()
-    app.processEvents()
-    timer_chart.stop()
-    print()
-
-
-# ------------------------------------------------------------------------------
+#   FakeDevice
 # ------------------------------------------------------------------------------
 
 
 class FakeDevice:
     """Simulates a data acquisition (DAQ) device that will generate data at a
-    fixed sample rate. It will push the data into the passed `ThreadSaveCurve`
-    instances.
+    fixed sampling rate.
     """
 
     def __init__(
         self,
-        tscurve_1_: ThreadSafeCurve,
-        tscurve_2_: ThreadSafeCurve,
-        tscurve_3_: ThreadSafeCurve,
     ):
         self.name = "FakeDevice"
         self.is_alive = True
-        self.tscurve_1 = tscurve_1_
-        self.tscurve_2 = tscurve_2_
-        self.tscurve_3 = tscurve_3_
+
+        self.block_size = int(np.round(WORKER_DAQ_INTERVAL_MS * Fs / 1e3))
+        self.data_x = np.zeros(self.block_size)
+        self.data_y_1 = np.zeros(self.block_size)
+        self.data_y_2 = np.zeros(self.block_size)
+
+        self.prev_x_value = 0
+        """Remember the phase of the previously generated data."""
 
     def generate_data(self):
-        if self.tscurve_1.size[0] == 0:
-            x_0 = 0
-        else:
-            # Pick up the previously last phase of the sine
-            # fmt: off
-            x_0 = self.tscurve_1._buffer_x[-1]  # pylint: disable=protected-access
-            # fmt: on
+        x = (1 + np.arange(self.block_size)) / Fs + self.prev_x_value
+        self.prev_x_value = x[-1]
 
-        x = (1 + np.arange(WORKER_DAQ_INTERVAL_MS * Fs / 1e3)) / Fs + x_0
-        y_sin = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
-        y_cos = np.cos(2 * np.pi * 0.09 * np.unwrap(x))
-
-        self.tscurve_1.extendData(x, y_sin)
-        self.tscurve_2.extendData(x, y_cos)
-        self.tscurve_3.extendData(y_sin, y_cos)
-
-        return True
+        self.data_x = x
+        self.data_y_1 = np.sin(2 * np.pi * 0.5 * np.unwrap(x))
+        self.data_y_2 = np.cos(2 * np.pi * 0.09 * np.unwrap(x))
 
 
 # ------------------------------------------------------------------------------
+#   BenchmarkDevice
 # ------------------------------------------------------------------------------
 
 
-class BenchmarkStatsDevice:
+class BenchmarkDevice(QtCore.QObject):
     """Simulates a device that keeps track of the benchmark stats and prints
     this to the terminal"""
 
+    signal_benchmark_finished = Signal()
+
     def __init__(self):
-        self.name = "BenchmarkStats"
+        super().__init__()
+
+        self.name = "Benchmark"
         self.is_alive = True
 
         self.iter = 0
@@ -588,15 +578,13 @@ class BenchmarkStatsDevice:
                 msg += " + monkeypatch"
 
             # Logging
-            # pylint: disable=redefined-outer-name
-            for line in msg:
-                print(line, end="")
-            with open(BENCH_LOG_FILE, "a", encoding="UTF8") as f:
-                f.writelines(msg)
-                f.write("\n\n\n")
-            # pylint: enable=redefined-outer-name
+            for msg_line in msg:
+                print(msg_line, end="")
+            with open(BENCH_LOG_FILE, "a", encoding="UTF8") as f_log:
+                f_log.writelines(msg)
+                f_log.write("\n\n\n")
 
-            app.exit()
+            self.signal_benchmark_finished.emit()
 
         self.iter += 1
         return True
@@ -607,52 +595,93 @@ class BenchmarkStatsDevice:
 # ------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    # Create QT application
     app = QtWid.QApplication(sys.argv)
-    app.aboutToQuit.connect(about_to_quit)
-
-    window = MainWindow()
 
     # FakeDevice:
     #   Simulates a data acquisition (DAQ) device that will generate data at a
-    #   fixed sample rate. It will push the data into the passed
-    #   `ThreadSaveCurve` instances.
+    #   fixed sampling rate.
+    fake_dev = FakeDevice()
+
     # QDeviceIO:
     #   Creates and manages a new thread for `fake_dev`. A worker will
-    #   perdiocally activate `fake_dev` from out of this new thread.
-    fake_dev = FakeDevice(window.tscurve_1, window.tscurve_2, window.tscurve_3)
+    #   periodically make `fake_dev` generate new data from out of this new
+    #   thread. The worker is called `Worker_DAQ`.
     fake_qdev = QDeviceIO(fake_dev)
-    fake_qdev.create_worker_DAQ(
-        DAQ_interval_ms=WORKER_DAQ_INTERVAL_MS,
-        DAQ_function=fake_dev.generate_data,
-    )
-    fake_qdev.signal_DAQ_updated.connect(window.update_GUI)
-    fake_qdev.start()
 
-    # BenchmarkStatsDevice:
+    def DAQ_function() -> bool:
+        """Data-acquisition (DAQ) routine to be run every time `Worker_DAQ`
+        is triggered. In this example we will set up `Worker_DAQ` to trigger at
+        a fixed interval of an internal timer."""
+
+        # Simulate new data coming in
+        fake_dev.generate_data()
+
+        # Add readings to the ThreadSafeCurves. This can be done from out of
+        # another thread like this one.
+        window.tscurve_1.extendData(fake_dev.data_x, fake_dev.data_y_1)
+        window.tscurve_2.extendData(fake_dev.data_x, fake_dev.data_y_2)
+        window.tscurve_3.extendData(fake_dev.data_y_1, fake_dev.data_y_2)
+
+        # Must return True to indicate all went successful
+        return True
+
+    fake_qdev.create_worker_DAQ(
+        DAQ_trigger=DAQ_TRIGGER.INTERNAL_TIMER,
+        DAQ_interval_ms=WORKER_DAQ_INTERVAL_MS,
+        DAQ_function=DAQ_function,
+    )
+
+    # Create the GUI
+    window = MainWindow(qdev=fake_qdev)
+    window.show()
+
+    # BenchmarkDevice:
     #   Simulates a device that keeps track of the benchmark stats and prints
     #   this to the terminal.
     # QDeviceIO:
     #   Creates and manages a new thread for `benchmark_dev`. A worker will
-    #   perdiocally activate `benchmark_dev` from out of this new thread.
-    benchmark_dev = BenchmarkStatsDevice()
+    #   periodically activate `benchmark_dev` from out of this new thread.
+    benchmark_dev = BenchmarkDevice()
     benchmark_qdev = QDeviceIO(benchmark_dev)
     benchmark_qdev.create_worker_DAQ(
+        DAQ_trigger=DAQ_TRIGGER.INTERNAL_TIMER,
         DAQ_interval_ms=BENCH_INTERVAL_MS,
         DAQ_function=benchmark_dev.measure_stats,
     )
-    benchmark_qdev.start()
-
-    # Chart refresh timer
-    timer_chart = QtCore.QTimer(timerType=QtCore.Qt.TimerType.PreciseTimer)
-    timer_chart.timeout.connect(window.update_charts)
-    timer_chart.start(CHART_DRAW_INTERVAL_MS)
 
     print(
         "   # |  FPS |  MIN |  MAX | RAM MB | CPU% | GPU%     "
         "<FPS> <RAM> <CPU%> <GPU%>"
     )
-    window.show()
 
+    # Chart refresh timer
+    timer_chart = QtCore.QTimer()
+    timer_chart.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
+    timer_chart.timeout.connect(window.update_charts)
+
+    # Start the workers and chart timer
+    fake_qdev.start()
+    benchmark_qdev.start()
+    timer_chart.start(CHART_DRAW_INTERVAL_MS)
+
+    # Program termination routine
+    @Slot()
+    def quit_benchmark():
+        print("\n")
+        benchmark_qdev.quit()
+        app.quit()
+
+    @Slot()
+    def about_to_quit():
+        print("\nAbout to quit")
+        benchmark_qdev.quit()
+        fake_qdev.quit()
+        timer_chart.stop()
+
+    # Start the main GUI event loop
+    benchmark_dev.signal_benchmark_finished.connect(quit_benchmark)
+    app.aboutToQuit.connect(about_to_quit)
     if QT_LIB in (PYQT5, PYSIDE2):
         sys.exit(app.exec_())
     else:
