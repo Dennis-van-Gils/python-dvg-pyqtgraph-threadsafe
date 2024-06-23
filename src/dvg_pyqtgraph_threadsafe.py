@@ -454,9 +454,9 @@ class LegendSelect(QtCore.QObject):
         [ Show / Hide all]
 
     Args:
-        linked_curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
-            List of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve`` to be
-            controlled by the legend.
+        linked_curves (``Sequence[pyqtgraph.PlotDataItem | ThreadSafeCurve]``):
+            Sequence of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve``
+            instances to be controlled by the legend.
 
         hide_toggle_button (``bool``, optional):
             Default: False
@@ -490,7 +490,7 @@ class LegendSelect(QtCore.QObject):
 
     def __init__(
         self,
-        linked_curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]],
+        linked_curves: Sequence[Union[pg.PlotDataItem, ThreadSafeCurve]],
         hide_toggle_button: bool = False,
         box_bg_color: QtGui.QColor = QtGui.QColor(0, 0, 0),
         box_width: int = 40,
@@ -662,11 +662,11 @@ class PlotManager(QtCore.QObject):
         self,
         linked_plots: Union[
             Union[pg.PlotItem, pg.ViewBox],
-            List[Union[pg.PlotItem, pg.ViewBox]],
+            Sequence[Union[pg.PlotItem, pg.ViewBox]],
         ],
         linked_curves: Union[
             Union[pg.PlotDataItem, ThreadSafeCurve],
-            List[Union[pg.PlotDataItem, ThreadSafeCurve]],
+            Sequence[Union[pg.PlotDataItem, ThreadSafeCurve]],
         ],
         presets: List[Presets],
     ):
@@ -675,12 +675,12 @@ class PlotManager(QtCore.QObject):
         data of the linked curves.
 
         Args:
-            linked_plots (``pyqtgraph.PlotItem`` | ``pyqtgraph.ViewBox`` |
-            List[``pyqtgraph.PlotItem`` | ``pyqtgraph.ViewBox``]):
+            linked_plots (``pyqtgraph.PlotItem | pyqtgraph.ViewBox |
+            Sequence[pyqtgraph.PlotItem | pyqtgraph.ViewBox]``):
                 Plots to perform the preset operation on.
 
-            linked_curves (``pyqtgraph.PlotDataItem`` | ``ThreadSafeCurve`` |
-            List[``pyqtgraph.PlotDataItem`` | ``ThreadSafeCurve``]):
+            linked_curves (``pyqtgraph.PlotDataItem | ThreadSafeCurve |
+            Sequence[pyqtgraph.PlotDataItem | ThreadSafeCurve]``):
                 Curves to perform the preset operation on.
 
             presets (``List[TypedDict]``):
@@ -709,11 +709,11 @@ class PlotManager(QtCore.QObject):
                         },
                     ]
         """
-        if not isinstance(linked_plots, list):
+        if not isinstance(linked_plots, Sequence):
             linked_plots = [linked_plots]
         self._presets_linked_plots = linked_plots
 
-        if not isinstance(linked_curves, list):
+        if not isinstance(linked_curves, Sequence):
             linked_curves = [linked_curves]
         self._presets_linked_curves = linked_curves
 
@@ -764,7 +764,7 @@ class PlotManager(QtCore.QObject):
         self,
         linked_plots: Union[
             Union[pg.PlotItem, pg.ViewBox],
-            List[Union[pg.PlotItem, pg.ViewBox]],
+            Sequence[Union[pg.PlotItem, pg.ViewBox]],
         ],
     ):
         """
@@ -777,11 +777,11 @@ class PlotManager(QtCore.QObject):
         plots, accordingly.
 
         Args:
-            linked_plots (``pyqtgraph.PlotItem`` | ``pyqtgraph.ViewBox`` |
-            List[``pyqtgraph.PlotItem`` | ``pyqtgraph.ViewBox``]):
+            linked_plots (``pyqtgraph.PlotItem | pyqtgraph.ViewBox |
+            Sequence[pyqtgraph.PlotItem | pyqtgraph.ViewBox]``):
                 Plots to perform the autorange operation on.
         """
-        if not isinstance(linked_plots, list):
+        if not isinstance(linked_plots, Sequence):
             linked_plots = [linked_plots]
         self._autorange_linked_plots = linked_plots
 
@@ -847,7 +847,7 @@ class PlotManager(QtCore.QObject):
         self,
         linked_curves: Union[
             Union[pg.PlotDataItem, ThreadSafeCurve],
-            List[Union[pg.PlotDataItem, ThreadSafeCurve]],
+            Sequence[Union[pg.PlotDataItem, ThreadSafeCurve]],
         ],
     ):
         """Add the 'Clear' button to the ``grid`` attribute. When clicked it
@@ -855,11 +855,11 @@ class PlotManager(QtCore.QObject):
         acknowledged, it will perform the clear.
 
         Args:
-            linked_curves (``pyqtgraph.PlotDataItem`` | ``ThreadSafeCurve`` |
-            List[``pyqtgraph.PlotDataItem`` | ``ThreadSafeCurve``]):
+            linked_curves (``pyqtgraph.PlotDataItem | ThreadSafeCurve |
+            Sequence[pyqtgraph.PlotDataItem | ThreadSafeCurve]``):
                 Curves to perform the clear operation on.
         """
-        if not isinstance(linked_curves, list):
+        if not isinstance(linked_curves, Sequence):
             linked_curves = [linked_curves]
         self._clear_linked_curves = linked_curves
 
