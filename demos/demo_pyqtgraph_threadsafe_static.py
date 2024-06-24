@@ -2,68 +2,13 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=invalid-name
 
-import os
 import sys
 
-# Mechanism to support both PyQt and PySide
-# -----------------------------------------
-
-PYQT5 = "PyQt5"
-PYQT6 = "PyQt6"
-PYSIDE2 = "PySide2"
-PYSIDE6 = "PySide6"
-QT_LIB_ORDER = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
-QT_LIB = os.getenv("PYQTGRAPH_QT_LIB")
-
-# Parse optional cli argument to enfore a QT_LIB
-# cli example: python benchmark.py pyside6
-if len(sys.argv) > 1:
-    arg1 = str(sys.argv[1]).upper()
-    for i, lib in enumerate(QT_LIB_ORDER):
-        if arg1 == lib.upper():
-            QT_LIB = lib
-            break
-
-if QT_LIB is None:
-    for lib in QT_LIB_ORDER:
-        if lib in sys.modules:
-            QT_LIB = lib
-            break
-
-if QT_LIB is None:
-    for lib in QT_LIB_ORDER:
-        try:
-            __import__(lib)
-            QT_LIB = lib
-            break
-        except ImportError:
-            pass
-
-if QT_LIB is None:
-    this_file = __file__.split(os.sep)[-1]
-    raise ImportError(
-        f"{this_file} requires PyQt5, PyQt6, PySide2 or PySide6; "
-        "none of these packages could be imported."
-    )
-
-# fmt: off
-# pylint: disable=import-error, no-name-in-module
-if QT_LIB == PYQT5:
-    from PyQt5 import QtWidgets as QtWid                   # type: ignore
-elif QT_LIB == PYQT6:
-    from PyQt6 import QtWidgets as QtWid                   # type: ignore
-elif QT_LIB == PYSIDE2:
-    from PySide2 import QtWidgets as QtWid                 # type: ignore
-elif QT_LIB == PYSIDE6:
-    from PySide6 import QtWidgets as QtWid                 # type: ignore
-# pylint: enable=import-error, no-name-in-module
-# fmt: on
-
-# \end[Mechanism to support both PyQt and PySide]
-# -----------------------------------------------
-
+from qtpy import QtWidgets as QtWid
 import numpy as np
 import pyqtgraph as pg
+
+from dvg_pyqtgraph_threadsafe import BufferedPlotCurve
 
 TRY_USING_OPENGL = True
 if TRY_USING_OPENGL:
@@ -78,7 +23,6 @@ if TRY_USING_OPENGL:
         pg.setConfigOptions(antialias=True)
         pg.setConfigOptions(enableExperimental=True)
 
-from dvg_pyqtgraph_threadsafe import BufferedPlotCurve
 
 # ------------------------------------------------------------------------------
 #   MainWindow
@@ -123,7 +67,4 @@ if __name__ == "__main__":
 
     window = MainWindow()
     window.show()
-    if QT_LIB in (PYQT5, PYSIDE2):
-        sys.exit(app.exec_())
-    else:
-        sys.exit(app.exec())
+    app.exec()
