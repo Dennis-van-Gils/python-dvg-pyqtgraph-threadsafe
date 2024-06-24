@@ -24,6 +24,20 @@ Installation::
 
     pip install dvg-pyqtgraph-threadsafe
 
+You must also ensure a Qt library is installed in your Python environment as
+this library will not install one for you. Pick one (personal recommendation
+PySide6)::
+
+    pip install pyqt5
+    pip install pyqt6
+    pip install pyside2
+    pip install pyside6
+
+Futhermore, you might want to enable OpenGL hardware accelerated plotting by
+installing PyOpenGL::
+
+    pip install pyopengl
+
 Useful links
 ------------
 
@@ -44,26 +58,29 @@ can be safely appended or set from out of any thread.
 The (x, y)-curve data is buffered internally to the class, relying on either a
 circular/ring buffer or a regular array buffer:
 
-    HistoryChartCurve
-        Ring buffer. The plotted x-data will be shifted such that the
-        right-side is always set to 0. I.e., when `x` denotes time, the data is
-        plotted backwards in time, hence the name *history* chart. The most
-        recent data is on the right-side of the ring buffer.
+* ``HistoryChartCurve``
+    Ring buffer. The plotted x-data will be shifted such that the
+    right-side is always set to 0. I.e., when `x` denotes time, the data is
+    plotted backwards in time, hence the name *history* chart. The most
+    recent data is on the right-side of the ring buffer.
 
-    BufferedPlotCurve
-        Ring buffer. Data will be plotted as is. Can also act as a Lissajous
-        figure.
+* ``BufferedPlotCurve``
+    Ring buffer. Data will be plotted as is. Can also act as a Lissajous
+    figure.
 
-    PlotCurve
-        Regular array buffer. Data will be plotted as is.
+* ``PlotCurve``
+    Regular array buffer. Data will be plotted as is.
 
-Usage:
+Usage
+-----
 
     .. code-block:: python
 
         import sys
-        from PyQt5 import QtWidgets
+
+        from qtpy import QtWidgets
         import pyqtgraph as pg
+
         from dvg_pyqtgraph_threadsafe import HistoryChartCurve
 
         class MainWindow(QtWidgets.QWidget):
@@ -73,8 +90,8 @@ Usage:
                 self.gw = pg.GraphicsLayoutWidget()
                 self.plot_1 = self.gw.addPlot()
 
-                # Create a HistoryChartCurve and have it wrap around a new PlotDataItem
-                # as set by argument `linked_curve`.
+                # Create a HistoryChartCurve and have it wrap around a new
+                # PlotDataItem as set by argument `linked_curve`.
                 self.tscurve_1 = HistoryChartCurve(
                     capacity=5,
                     linked_curve=self.plot_1.plot(pen=pg.mkPen('r')),
@@ -93,7 +110,7 @@ Usage:
         window.tscurve_1.update()
 
         window.show()
-        sys.exit(app.exec_())
+        sys.exit(app.exec())
 
 
 Benchmark
@@ -115,9 +132,19 @@ See `benchmark results <https://github.com/Dennis-van-Gils/python-dvg-pyqtgraph-
 API
 ===
 
+Class ThreadSafeCurve
+---------------------
 
-``class ThreadSafeCurve(capacity: Optional[int], linked_curve: pg.PlotDataItem, shift_right_x_to_zero: bool = False, use_ringbuffer = None)``
----------------------------------------------------------------------------------------------------------------------------------------------
+.. code-block:: python
+
+    ThreadSafeCurve(
+        capacity: int | None,
+        linked_curve: pyqtgraph.PlotDataItem,
+        shift_right_x_to_zero: bool = False,
+        use_ringbuffer=None,
+    )
+
+.. Note::
 
     Provides the base class for a thread-safe plot *curve* to which
     (x, y)-data can be safely appended or set from out of any thread. It
@@ -172,51 +199,62 @@ API
 
             Default: 1
 
-Methods
--------
-* ``appendData(x, y)``
-    Append a single (x, y)-data point to the ring buffer.
+    Methods:
+        * ``appendData(x, y)``
+            Append a single (x, y)-data point to the ring buffer.
 
-* ``extendData(x_list, y_list)``
-    Extend the ring buffer with a list of (x, y)-data points.
+        * ``extendData(x_list, y_list)``
+            Extend the ring buffer with a list of (x, y)-data points.
 
-* ``setData(x_list, y_list)``
-    Set the (x, y)-data of the regular array buffer.
+        * ``setData(x_list, y_list)``
+            Set the (x, y)-data of the regular array buffer.
 
-* ``update(create_snapshot: bool = True)``
-    Update the data behind the curve by creating a snapshot of the
-    current contents of the buffer, and redraw the curve on screen.
+        * ``update(create_snapshot: bool = True)``
+            Update the data behind the curve by creating a snapshot of the
+            current contents of the buffer, and redraw the curve on screen.
 
-    You can suppress updating the data behind the curve by setting parameter
-    ``create_snapshot`` to False. The curve will then only be redrawn
-    based on the old data. This is useful when the plot is paused.
+            You can suppress updating the data behind the curve by setting parameter
+            ``create_snapshot`` to False. The curve will then only be redrawn
+            based on the old data. This is useful when the plot is paused.
 
-* ``clear()``
-    Clear the contents of the curve and redraw.
+        * ``clear()``
+            Clear the contents of the curve and redraw.
 
-* ``name()``
-    Get the name of the curve.
+        * ``name()``
+            Get the name of the curve.
 
-* ``isVisible() -> bool``
-* ``setVisible(state: bool = True)``
+        * ``isVisible() -> bool``
+            Is the curve visible?
 
-* ``setDownsampling(*args, **kwargs)``
-    All arguments will be passed onto method
-    ``pyqtgraph.PlotDataItem.setDownsampling()`` of the underlying curve.
+        * ``setVisible(state: bool = True)``
+            Set the visibility of the curve.
+
+        * ``setDownsampling(*args, **kwargs)``
+            All arguments will be passed onto method
+            ``pyqtgraph.PlotDataItem.setDownsampling()`` of the underlying curve.
 
 
-Properties
-----------
-* ``size -> Tuple[int, int]``:
-    Number of elements currently contained in the underlying (x, y)-
-    buffers of the curve. Note that this is not necessarily the number of
-    elements of the currently drawn curve. Instead, it reflects the current
-    sizes of the data buffers behind it that will be drawn onto screen by
-    the next call to ``update()``.
+    Properties:
+        * ``size -> Tuple[int, int]``:
+            Number of elements currently contained in the underlying (x, y)-
+            buffers of the curve. Note that this is not necessarily the number of
+            elements of the currently drawn curve. Instead, it reflects the current
+            sizes of the data buffers behind it that will be drawn onto screen by
+            the next call to ``update()``.
 
-``class HistoryChartCurve(capacity: int, linked_curve: pg.PlotDataItem)``
---------------------------------------------------------------------------
-    Bases: ``ThreadSafeCurve``
+Class HistoryChartCurve
+-----------------------
+
+.. code-block:: python
+
+    HistoryChartCurve(
+        capacity: int,
+        linked_curve: pyqtgraph.PlotDataItem,
+    )
+
+.. Note::
+
+    Inherits from: ``ThreadSafeCurve``
 
     Provides a thread-safe curve with underlying ring buffers for the
     (x, y)-data. New readings are placed at the end (right-side) of the
@@ -230,9 +268,19 @@ Properties
 
     See class ``ThreadSafeCurve`` for more details.
 
-``class BufferedPlotCurve(capacity: int, linked_curve: pg.PlotDataItem)``
---------------------------------------------------------------------------
-    Bases: ``ThreadSafeCurve``
+Class BufferedPlotCurve
+-----------------------
+
+.. code-block:: python
+
+    BufferedPlotCurve(
+        capacity: int,
+        linked_curve: pyqtgraph.PlotDataItem,
+    )
+
+.. Note::
+
+    Inherits from: ``ThreadSafeCurve``
 
     Provides a thread-safe curve with underlying ring buffers for the
     (x, y)-data. New readings are placed at the end (right-side) of the
@@ -242,31 +290,49 @@ Properties
 
     See class ``ThreadSafeCurve`` for more details.
 
-``class PlotCurve(capacity: int, linked_curve: pg.PlotDataItem)``
---------------------------------------------------------------------------
-    Bases: ``ThreadSafeCurve``
+Class PlotCurve
+-----------------------
+
+.. code-block:: python
+
+    PlotCurve(
+        capacity: int,
+        linked_curve: pyqtgraph.PlotDataItem,
+    )
+
+.. Note::
+
+    Inherits from: ``ThreadSafeCurve``
 
     Provides a thread-safe curve with underlying regular array buffers
     for the (x, y)-data. Use method ``setData()`` to set the data.
 
     See class ``ThreadSafeCurve`` for more details.
 
-``class LegendSelect(curves: List[Union[pg.PlotDataItem, ThreadSafeCurve]], hide_toggle_button: bool = False, box_bg_color: QtGui.QColor = QtGui.QColor(0, 0, 0), box_width: int = 40, box_height: int = 23, parent=None)``
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Bases: ``PyQt5.QtCore.QObject``
+API Extras
+==========
+
+Class LegendSelect
+------------------
+
+.. code-block:: python
+
+    LegendSelect(
+        linked_curves: Sequence[pyqtgraph.PlotDataItem | ThreadSafeCurve],
+        hide_toggle_button: bool = False,
+        box_bg_color: QtGui.QColor = QtGui.QColor(0, 0, 0),
+        box_width: int = 40,
+        box_height: int = 23,
+        parent=None,
+    )
+
+.. Note:: Inherits from: ``PyQt5.QtCore.QObject``
 
     Creates and manages a legend of all passed curves with checkboxes to
     show or hide each curve. The legend ends with a push button to show or
     hide all curves in one go. The full set of GUI elements is contained in
     attribute ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be added to
     your GUI.
-
-    The initial visibility, name and pen of each curve will be retrieved
-    from the members within the passed curves, i.e.:
-
-        * ``curve.isVisible()``
-        * ``curve.name()``
-        * ``curve.opts["pen"]``
 
     Example grid::
 
@@ -275,10 +341,17 @@ Properties
         □ Curve 3  [  /  ]
         [ Show / Hide all]
 
+    The initial visibility, name and pen of each curve will be retrieved
+    from the members within the passed curves, i.e.:
+
+        * ``curve.isVisible()``
+        * ``curve.name()``
+        * ``curve.opts["pen"]``
+
     Args:
-        linked_curves (``List[Union[pyqtgraph.PlotDataItem, ThreadSafeCurve]]``):
-            List of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve`` to be
-            controlled by the legend.
+        linked_curves (``Sequence[pyqtgraph.PlotDataItem | ThreadSafeCurve]``):
+            Sequence of ``pyqtgraph.PlotDataItem`` or ``ThreadSafeCurve``
+            instances to be controlled by the legend.
 
         hide_toggle_button (``bool``, optional):
             Default: False
@@ -307,4 +380,49 @@ Properties
 
         grid (``PyQt5.QtWidgets.QGridLayout``):
             The full set of GUI elements combined into a grid to be added
+            to your GUI.
+
+Class PlotManager
+------------------
+
+.. code-block:: python
+
+    PlotManager(
+        parent=None,
+    )
+
+.. Note:: Inherits from: ``PyQt5.QtCore.QObject``
+
+    Creates and manages a collection of pushbuttons with predefined actions
+    operating on the linked plots and curves. The full set of pushbuttons is
+    contained in attribute ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be
+    added to your GUI.
+
+    Example grid::
+
+        [   Full range  ]
+        [auto x] [auto y]
+        [      0:30     ]
+        [      1:00     ]
+        [      3:00     ]
+        [     10:00     ]
+
+        [     Clear     ]
+
+    The grid starts empty and is build up by calling the following methods:
+        - ``add_autorange_buttons()``: Adds the [Full range], [auto x] and
+          [auto y] buttons.
+
+        - ``add_preset_buttons()``: Adds presets on the x-axis range to zoom to.
+
+        - ``add_clear_button()``: Adds the 'Clear' button.
+
+    Args:
+        parent (``PyQt5.QtWidgets.QWidget``):
+            Needs to be set to the parent ``QWidget`` for the ``QMessageBox`` as
+            fired by button ``Clear`` to appear centered and modal to.
+
+    Attributes:
+        grid (``PyQt5.QtWidgets.QGridLayout``):
+            The full set of pushbuttons combined into a grid to be added
             to your GUI.
