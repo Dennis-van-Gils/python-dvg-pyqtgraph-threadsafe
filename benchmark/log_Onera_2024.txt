@@ -1,0 +1,174 @@
+----------------------240624_161958
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.11.0 + monkeypatch
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PyQt5      50.0  50.0  50.0  161      2.8    53.2   0.11.0 + monkeypatch
+
+
+----------------------240624_162113
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.11.0 + monkeypatch
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PySide2    50.0  50.0  50.0  174      2.9    54.0   0.11.0 + monkeypatch
+
+
+----------------------240624_162232
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.11.1
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PyQt5      50.0  50.0  50.0  174      3.0    52.3   0.11.1              
+
+
+----------------------240624_162347
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.11.1
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PySide2    50.0  50.0  50.1  180      3.0    52.9   0.11.1              
+
+
+----------------------240624_162636
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.12.4
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PyQt5      50.0  50.0  50.1  180      4.1    51.7   0.12.4              
+
+
+----------------------240624_162751
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PyQt6     | 6.7.1
+PyQtGraph | 0.12.4
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PyQt6      50.0  50.0  50.0  189      4.4    50.4   0.12.4              
+
+
+----------------------240624_163112
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.12.4
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PySide2    50.0  50.0  50.1  191      4.2    52.5   0.12.4              
+
+
+----------------------240624_163228
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PySide6   | 6.7.2
+PyQtGraph | 0.12.4
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+----------------------240624_163232
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PyQt5     | 5.15.2
+PyQtGraph | 0.13.7
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PyQt5      50.0  50.0  50.1  177      4.0    51.8   0.13.7              
+
+
+----------------------240624_163348
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PyQt6     | 6.7.1
+PyQtGraph | 0.13.7
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PyQt6      50.0  50.0  50.0  189      4.5    52.6   0.13.7              
+
+
+----------------------240624_163503
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PySide2   | 5.15.2
+PyQtGraph | 0.13.7
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PySide2    50.0  50.0  50.0  189      3.9    53.0   0.13.7              
+
+
+----------------------240624_163619
+Python    | 3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:40:08) [MSC v.1938 64 bit (AMD64)]
+PySide6   | 6.7.2
+PyQtGraph | 0.13.7
+PyOpenGL  | 3.1.7
+Platform  | Windows-10-10.0.19045-SP0
+CPU       | AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+GPU       | NVIDIA GeForce RTX 4070
+-----------------------------------
+==== ========== ===== ===== ===== ======== ====== ====== ==================== 
+py   QT_LIB     <FPS> MIN   MAX   <RAM MB> <CPU%> <GPU%> pyqtgraph            
+---- ---------- ----- ----- ----- -------- ------ ------ -------------------- 
+3.10 PySide6    50.0  50.0  50.0  222      4.7    51.4   0.13.7              
+
+

@@ -5,14 +5,12 @@ set NAME_ENV_PY310=py310bench
 REM Python 3.6
 call conda create -c conda-forge -n %NAME_ENV_PY36% python=3.6
 call conda activate %NAME_ENV_PY36%
-pip install ipython black pylint
 pip install pyqt5 pyside2
 pip install -r requirements.txt
 
 REM Python 3.10
 call conda create -c conda-forge -n %NAME_ENV_PY310% python=3.10
 call conda activate %NAME_ENV_PY310%
-pip install ipython black pylint
 pip install pyqt5 pyqt6 pyside2 pyside6
 pip install -r requirements.txt
 
@@ -26,12 +24,12 @@ REM Might result in lower Qt minor-versions to get installed
 REM --------------------
 
 REM Python 3.6
-call conda create -c conda-forge -n %NAME_ENV_PY36% python=3.6 ipython black pylint numpy pyopengl pyqt pyside2
+call conda create -c conda-forge -n %NAME_ENV_PY36% python=3.6 numpy pyopengl pyqt pyside2
 call conda activate %NAME_ENV_PY36%
 pip install -r requirements.txt
 
 REM Python 3.10
-call conda create -c conda-forge -n %NAME_ENV_PY310% python=3.10 ipython black pylint numpy pyopengl pyqt pyside2
+call conda create -c conda-forge -n %NAME_ENV_PY310% python=3.10 numpy pyopengl pyqt pyside2
 call conda activate %NAME_ENV_PY310%
 pip install pyqt6 pyside6
 pip install -r requirements.txt
