@@ -1,8 +1,18 @@
 Changelog
 =========
 
-3.4.0 (2024-06-22)
+3.4.0 (2024-06-24)
 ------------------
+Code quality improvements:
+
+* Using ``qtpy`` library instead of my own Qt5/6 mechanism
+* Using f-strings
+* Extended API and docstrings, like on `PlotManager`.
+* Arguments `linked_curves` and `linked_plots` are hinted as `Sequence` instead
+  of as `List`
+
+Added support:
+
 * Support for Numpy 2.0
 
 3.3.0 (2023-02-27)
