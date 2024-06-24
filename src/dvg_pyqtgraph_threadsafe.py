@@ -35,7 +35,7 @@ Usage:
     .. code-block:: python
 
         import sys
-        from PyQt5 import QtWidgets
+        from qtpy import QtWidgets
         import pyqtgraph as pg
         from dvg_pyqtgraph_threadsafe import HistoryChartCurve
 
@@ -66,7 +66,7 @@ Usage:
         window.tscurve_1.update()
 
         window.show()
-        sys.exit(app.exec_())
+        sys.exit(app.exec())
 """
 __author__ = "Dennis van Gils"
 __authoremail__ = "vangils.dennis@gmail.com"
@@ -439,19 +439,19 @@ class LegendSelect(QtCore.QObject):
     attribute ``grid`` of type ``PyQt5.QtWidget.QGridLayout`` to be added to
     your GUI.
 
-    The initial visibility, name and pen of each curve will be retrieved
-    from the members within the passed curves, i.e.:
-
-        * ``curve.isVisible()``
-        * ``curve.name()``
-        * ``curve.opts["pen"]``
-
     Example grid::
 
         □ Curve 1  [  /  ]
         □ Curve 2  [  /  ]
         □ Curve 3  [  /  ]
         [ Show / Hide all]
+
+    The initial visibility, name and pen of each curve will be retrieved
+    from the members within the passed curves, i.e.:
+
+        * ``curve.isVisible()``
+        * ``curve.name()``
+        * ``curve.opts["pen"]``
 
     Args:
         linked_curves (``Sequence[pyqtgraph.PlotDataItem | ThreadSafeCurve]``):
