@@ -25,8 +25,8 @@ Installation::
     pip install dvg-pyqtgraph-threadsafe
 
 You must also ensure a Qt library is installed in your Python environment as
-this library will not install one for you. Pick one (personal recommendation
-PySide6)::
+this library will not install one for you. Pick one. My personal recommendation
+is ``PyQt5 for Python <= 3.7``, and ``PySide6 for Python >= 3.8``::
 
     pip install pyqt5
     pip install pyqt6
